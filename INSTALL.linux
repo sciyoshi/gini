@@ -1,0 +1,78 @@
+GINI Toolkit Version 2.0.0
+
+Basic Installation - Linux
+==========================
+
+To install GINI, you need the following libraries and applications:
+
+    Libreadline 5.0 or up (plus development files)
+    Libslack
+    Python 2.5 or up (plus development files)
+    - Python 2.6 STRONGLY recommended
+    Python-xml 0.8 or up
+    PyQt 4.4 or up
+    - PyQt 4.5 STRONGLY recommended
+    Scons 1.2 or up
+    Screen 4.0 or up
+    Svn
+    UML-utilities
+
+Install each of these libraries, either through a package manager or
+from source.  Libslack is unavailable on most, if not all, package 
+managers, and must be installed from source.  It is available
+at http://libslack.org/.
+
+Once the libraries are installed, you must set the GINI_HOME environment 
+variable to the location of your installation.  It is best to create
+a separate directory, called "gini", where the GINI files will be installed.
+
+The below instructions only work for the BASH shell.  To enter bash from 
+another shell type "bash".
+
+Create a "gini" directory in your home directory:
+
+    mkdir $HOME/gini
+
+Edit the .bashrc file (or create it if it's unavailable) in your home 
+directory and add the following:
+
+    export GINI_HOME=$HOME/gini
+    export PATH=$PATH:$GINI_HOME/bin
+
+This sets the GINI_HOME environment variable to your desired path, and
+adds the bin directory within GINI_HOME to your PATH variable.
+
+To enable the new settings, run the following:
+
+    source $HOME/.bashrc
+
+Now we are ready to configure and install GINI.  To grab the latest stable
+GINI source code, run the following:
+
+    svn co https://svn.origo.ethz.ch/gini/stable gini-src
+
+If you are using Python 2.5, before installing, you must run the following 
+command to configure pyXML:
+
+    `echo 'oldxml' > /usr/lib/python2.5/site-packages/oldxml.pth`
+
+Within the gini-src directory, run the following to install both the frontend
+and backend:
+
+    scons install
+
+To only install the frontend, run:
+
+    cd frontend && scons install
+
+Likewise, to only install the backend, run:
+
+    cd backend && scons install
+
+Notes
+=====
+
+GINI should work on all linux distributions with the required dependencies 
+installed.  If you have any problems on any distribution and/or 
+release, please e-mail the mailing list at <gini at cs dot mcgill dot ca>.
+

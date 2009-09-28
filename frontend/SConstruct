@@ -1,0 +1,48 @@
+# -*- python -*-
+#
+# GINI Version 2.0
+# (C) Copyright 2009, McGill University
+#
+# Scons compile script for creating GINI installation
+#
+import os.path
+import sys
+
+EnsurePythonVersion(2,5)
+
+try:
+    Import('gini_home')
+except:
+    try:
+        gini_home = os.environ['GINI_HOME']
+    except KeyError:
+        print "ERROR! The GINI_HOME environment variable not set."
+        print "Set GINI_HOME and rerun the installation script."
+        Exit(1)
+    Export('gini_home')
+
+try:
+    Import('env')
+except:
+    env = Environment()
+    Export('env')
+
+bin_files = Split ("""
+                   bin/cygiconv-2.dll
+                   bin/cygintl-8.dll
+                   bin/cygwin1.dll
+                   bin/tail.exe
+                   """)
+
+doc_files = 'doc/FAQ.html'
+
+env.Execute(Mkdir(gini_home + "/tmp"))
+env.Execute(Mkdir(gini_home + "/sav"))
+env.Execute(Mkdir(gini_home + "/etc"))
+if env['PLATFORM'] == 'win32':
+    env.Install(gini_home + '/bin', bin_files)
+env.Install(gini_home + '/doc', doc_files)
+env.Alias('install', gini_home)
+
+SConscript('src/gbuilder/SConscript')
+

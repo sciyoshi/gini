@@ -1,0 +1,54 @@
+Import('gini_src')
+Import('gini_home')
+
+gini_include = gini_src + '/include'
+
+env = Environment(CPPPATH=gini_include)
+env.Append(CFLAGS='-g')
+env.Append(CFLAGS='-DHAVE_PTHREAD_RWLOCK=1')
+env.Append(CFLAGS='-DHAVE_GETOPT_LONG')
+
+grouter_src = Split ("""grouter.c
+                        arp.c
+                        ethernet.c
+                        tap.c
+                        tapio.c
+                        gnet.c
+                        ip.c
+                        message.c
+                        mtu.c
+                        routetable.c
+                        vpl.c
+                        cli.c
+                        fragment.c
+                        packetcore.c
+                        icmp.c
+                        utils.c
+                        simplequeue.c
+                        classifier.c
+                        console.c
+                        info.c
+                        roundrobin.c
+                        wfq.c
+                        filter.c""")
+
+# some of the following library dependencies can be removed?
+# may be the termcap is not needed anymore..?
+# TODO: libslack should be removed.. required routines should be custom compiled
+
+grouter_libs = Split ("""readline
+                         termcap
+                         slack
+                         pthread
+                         util
+                         m""")
+
+grouter = env.Program(grouter_src, LIBS=grouter_libs)
+
+print "GINI home is .. " + gini_home
+
+print "Installing in " + gini_home + '/bin' + ".. grouter " 
+env.Install(gini_home + '/bin', grouter)
+env.Install(gini_home + '/share/grouter', gini_include + '/helpdefs')
+env.Alias('install', gini_home + '/bin')
+

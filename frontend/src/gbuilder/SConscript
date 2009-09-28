@@ -1,0 +1,24 @@
+import os
+
+Import('env')
+Import('gini_home')
+
+gbuilder_files = Split("""
+    .svn
+    gbuilder.py
+    Core
+    Devices
+    images
+    Network
+    UI""")
+
+#if env['PLATFORM'] == 'win32':
+#    linkCmd = "mklink $TARGET $SOURCE"
+#else:
+#    linkCmd = "ln $SOURCE $TARGET"
+
+env.Install(gini_home + '/share/gbuilder', gbuilder_files)
+if env['PLATFORM'] != 'win32':
+    env.Command(gini_home + '/bin/gbuilder', gini_home + '/share/gbuilder/gbuilder.py', "ln -s $SOURCE $TARGET")
+env.Alias('install', gini_home + '/share/gbuilder')
+

@@ -1,0 +1,12 @@
+Import('gini_src')
+Import('gini_home')
+
+kernel_files = ['linux-2.6.26.1']
+other_kernels = ['linux-2.6.25.10']
+
+env = Environment()
+
+env.Alias('install', gini_home + '/bin')
+env.Command(gini_home + '/bin/glinux', 'glinux', "cp $SOURCE $TARGET; chmod a+x $TARGET")
+env.Command(gini_home + '/bin/linux-2.6.26.1', 'linux-2.6.26.1', "cp $SOURCE $TARGET; chmod a+x $TARGET")
+

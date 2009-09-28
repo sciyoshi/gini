@@ -1,0 +1,22 @@
+
+import os
+    
+gini_home = os.environ['GINI_HOME']
+
+gloader_files = Split("""gloader.py
+			  gdist.py
+			  gini_components.py
+			  gini_nw.py
+			  gserver.py
+			  program.py
+			  starter.py
+			  TaskManager.py
+			  utilities.py
+			  xml_processor.py""")
+
+env = Environment()
+
+env.Install(gini_home + '/share/gbuilder', gbuilder_files)
+env.Alias('install', gini_home + '/share/gbuilder')
+
+

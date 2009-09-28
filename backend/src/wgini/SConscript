@@ -1,0 +1,56 @@
+Import('gini_src')
+Import('gini_home')
+
+# set the include directory
+
+wgini_include = gini_src + '/include/wgini'
+
+env = Environment(CPPPATH=wgini_include)
+env.Append(CFLAGS='-DHAVE_PTHREAD_RWLOCK=1')
+env.Append(CFLAGS='-DHAVE_GETOPT_LONG')
+
+# all source files in this directory
+# we could have used Glob('*.c') as well.. but explicit
+# listing provides finer control over the list.
+
+wgini_src = Split ("""gwcenter.c
+                      802_11.c
+		      cli.c 
+		      fading.c 
+		      mathlib.c 
+		      timer.c 
+		      802_11_frame.c 
+		      csma.c 
+		      mobility.c 
+		      antenna.c 
+		      energy.c 
+		      llc.c 
+		      nomac.c 
+		      vpl.c 
+		      awgn.c 
+		      errmodel.c 
+		      mac.c 
+		      propagation.c 
+		      wcard.c 
+		      channel.c 
+		      event.c 
+		      stats.c 
+		      wirelessphy.c""")
+
+# some of the following library dependencies can be removed?
+# may be the termcap is not needed anymore..?
+# TODO: libslack should be removed.. required routines should be custom compiled
+
+wgini_libs = Split ("""readline
+			 termcap
+			 slack
+			 pthread
+			 util
+			 m""")
+
+gwcenter = env.Program(wgini_src, LIBS=wgini_libs)
+
+env.Install(gini_home + '/bin', gwcenter)
+env.Alias('install', gini_home + '/bin')
+env.Command(gini_home + '/bin/gwcenter.sh', 'gwcenter.sh', "cp $SOURCE $TARGET; chmod a+x $TARGET")
+

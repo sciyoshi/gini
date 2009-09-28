@@ -1,0 +1,24 @@
+Import('gini_src')
+Import('gini_home')
+
+gloader_files = Split("""gloader.py
+                         gdist.py
+                         gini_components.py
+                         gini_nw.py
+                         gserver.py
+                         program.py
+                         starter.py
+                         TaskManager.py
+                         utilities.py
+                         xml_processor.py""")
+
+gloader_conf = ['gloader.dtd']
+
+env = Environment()
+
+env.Install(gini_home + '/share/gloader', gloader_files)
+env.Alias('install', gini_home + '/share/gloader')
+env.Install(gini_home + '/etc', gloader_conf)
+env.Alias('install', gini_home + '/etc')
+env.Command(gini_home + '/bin/gloader', gini_home + '/share/gloader/gloader.py', ["ln -s $SOURCE $TARGET", Chmod("$SOURCE", 0755), Chmod("$TARGET", 0755)])
+env.Command(gini_home + '/bin/gserver', gini_home + '/share/gloader/gserver.py', ["ln -s $SOURCE $TARGET", Chmod("$SOURCE", 0755), Chmod("$TARGET", 0755)])

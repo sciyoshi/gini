@@ -1,0 +1,18 @@
+import os
+
+Import('gini_src')
+Import('gini_home')
+
+usw_include = gini_src + '/include/uswitch'
+env = Environment(CPPPATH=usw_include)
+
+usw_src = Split ("""uswitch.c
+                    hash.c
+                    cleanup.c
+                    port.c""")
+
+uswitch = env.Program(usw_src)
+
+env.Install(gini_home + '/bin', uswitch)
+env.Alias('install', gini_home + '/bin')
+

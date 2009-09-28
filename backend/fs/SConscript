@@ -1,0 +1,9 @@
+Import('gini_src')
+Import('gini_home')
+
+filesystem_src = ['GiniLinux-fs-1.0q.gz']
+
+env = Environment()
+
+env.Command(gini_home + '/root_fs_beta2', filesystem_src, "gzip -cd $SOURCE > $TARGET")
+env.Alias('install', gini_home)

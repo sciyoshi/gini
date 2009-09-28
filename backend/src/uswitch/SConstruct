@@ -1,0 +1,39 @@
+import os
+
+# set include directories.
+
+Import('gini_src')
+Import('gini_home')
+
+# set the include directory
+
+usw_include = gini_src + '/include/uswitch'
+
+
+
+env = Environment(CPPPATH=usw_include)
+
+# all source files in this directory
+# we could have used Glob('*.c') as well.. but explicit
+# listing provides finer control over the list.
+
+usw_src = Split ("""uswitch.c
+		    hash.c
+		    cleanup.c
+		    port.c""")
+
+# Any library dependencies go here..
+
+usw_libs = Split ("""
+			""")
+
+uswitch = env.Program(usw_src)
+
+if GetOption('install') > 0 and gini_home != None:
+	env.Install(gini_home + '/bin', uswitch)
+        env.Alias('install', gini_home + '/bin')
+
+
+if GetOption('dist') > 0:
+	env.Append(TARFLAGS = '-c -z --exclude="*.svn*"', TARSUFFIX = '.tgz')
+	env.Tar(gini_src + '/gini', usw_src + ['SConstruct', 'SConscript'])
