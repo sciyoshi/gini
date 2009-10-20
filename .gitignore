@@ -1,0 +1,5 @@
+config.log
+backend/build
+*.pyc
+.sconf*
+.scons*
