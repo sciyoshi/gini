@@ -26,6 +26,7 @@
 #include "filter.h"
 #include "classspec.h"
 #include "packetcore.h"
+#include "udp.h"
 #include <slack/err.h>
 #include <slack/std.h>
 #include <slack/prog.h>
@@ -93,6 +94,10 @@ int CLIInit(router_config *rarg)
 	registerCLI("filter", filterCmd, SHELP_FILTER, USAGE_FILTER, LHELP_FILTER);
 
 
+	registerCLI("udp", grtr_cli_udp, "", "", "");
+
+
+
 	if (rarg->config_dir != NULL)
 		chdir(rarg->config_dir);                  // change to the configuration directory
 	if (rarg->config_file != NULL)
@@ -149,7 +154,7 @@ void parseACLICmd(char *str)
 	strcpy(orig_str, str);
 	token = strtok(str, " \n");
 	if ((clie = map_get(cli_map, token)) != NULL)
-		clie->handler((void *)clie);
+		clie->handler(orig_str);
 	else
 		system(orig_str);
 

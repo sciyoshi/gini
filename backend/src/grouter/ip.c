@@ -11,6 +11,7 @@
 #include "mtu.h"
 #include "protocols.h"
 #include "ip.h"
+#include "udp.h"
 #include "fragment.h"
 #include "packetcore.h"
 #include <stdlib.h>
@@ -304,10 +305,9 @@ int IPProcessMyPacket(gpacket_t *in_pkt)
 	{
 		// Is packet ICMP? send it to the ICMP module 
 		// further processing with appropriate type code
-		
+
 		if (ip_pkt->ip_prot == ICMP_PROTOCOL)
 			ICMPProcessPacket(in_pkt);
-		return EXIT_SUCCESS;
 
 		// Is packet UDP/TCP (only UDP implemented now)
 		// May be we can deal with other connectionless protocols as well.
@@ -325,20 +325,12 @@ int IPProcessMyPacket(gpacket_t *in_pkt)
  */
 int UDPProcess(gpacket_t *in_pkt)
 {
-	verbose(2, "[UDPProcess]:: packet received for processing.. NOT YET IMPLEMENTED!! ");
+	verbose(2, "[UDPProcess]:: packet received for processing.. ");
+	grtr_udp_process (in_pkt);
 	return EXIT_SUCCESS;
 }
 
-
-/*
- * this function processes the IP packets that are reinjected into the
- * IP layer by ICMP, UDP, and other higher-layers.
- * There can be two scenarios. The packet can be a reply for an original
- * query OR it can be a new one. The processing performed by this function depends
- * on the packet type..
- * IMPORTANT: src_prot is the source protocol number.
- */
-int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int src_prot)
+int IPPreparePacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int src_prot)
 {
         ip_packet_t *ip_pkt = (ip_packet_t *)pkt->data.data;
 	ushort cksum;
@@ -401,6 +393,24 @@ int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int s
 	cksum = checksum((uchar *)ip_pkt, ip_pkt->ip_hdr_len*2);
 	ip_pkt->ip_cksum = htons(cksum);
 	pkt->data.header.prot = htons(IP_PROTOCOL);
+
+	return EXIT_SUCCESS;
+}
+
+
+/*
+ * this function processes the IP packets that are reinjected into the
+ * IP layer by ICMP, UDP, and other higher-layers.
+ * There can be two scenarios. The packet can be a reply for an original
+ * query OR it can be a new one. The processing performed by this function depends
+ * on the packet type..
+ * IMPORTANT: src_prot is the source protocol number.
+ */
+int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int src_prot)
+{
+	if (IPPreparePacket (pkt, dst_ip, size, newflag, src_prot) != EXIT_SUCCESS) {
+		return EXIT_FAILURE;
+	}
 
 	IPSend2Output(pkt);
 	verbose(2, "[IPOutgoingPacket]:: IP packet sent to output queue.. ");

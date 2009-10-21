@@ -14,6 +14,7 @@
 #include <errno.h>
 #include "packetcore.h"
 #include "classifier.h"
+#include "udp.h"
 #include "filter.h"
 #include <pthread.h>
 
@@ -71,6 +72,8 @@ int main(int ac, char *av[])
 	GNETInit(&(rconfig.ghandler), rconfig.config_dir, rconfig.router_name, outputQ);
 	ARPInit();
 	IPInit();
+
+	grtr_udp_init ();
 
 	classifier = createClassifier();
 	filter = createFilter(classifier, 0);

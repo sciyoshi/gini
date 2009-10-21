@@ -50,6 +50,7 @@ void ICMPProcessPacket(gpacket_t *in_pkt)
 	case ICMP_TIMESTAMPREPLY:
 	case ICMP_INFO_REQUEST:
 	case ICMP_INFO_REPLY:
+	default:
 		verbose(2, "[ICMPProcessPacket]:: ICMP processing for type %d not implemented ", icmphdr->type);
 		break;
 	}

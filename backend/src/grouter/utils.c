@@ -147,7 +147,6 @@ void redefineSignalHandler(int sigid, void (*my_func)(int signum))
 }
 
 
-
 /*
  * compute the checksum of a buffer, by adding 2-byte words
  * and returning their one's complement

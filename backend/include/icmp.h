@@ -12,7 +12,13 @@
 #include "grouter.h"
 #include "message.h"
 
+typedef enum {
+	GINI_ICMP_TYPE_DEST_UNREACHABLE = 3
+} GiniIcmpType;
 
+typedef enum {
+	GINI_ICMP_CODE_PORT_UNREACHABLE = 3
+} GiniIcmpCode;
 
 #define ICMP_ECHO_REPLY          0      /* Echo Reply                   */
 #define ICMP_ECHO_REQUEST        8      /* Echo Request                 */
