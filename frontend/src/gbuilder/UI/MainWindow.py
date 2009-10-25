@@ -560,6 +560,7 @@ class MainWindow(Systray):
         for item in scene.items():
             if item.type == "Switch":
                 item.restart()
+        time.sleep(0.5)
         for item in scene.items():
             if item.type == "Mobile":
                 item.restart()
