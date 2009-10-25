@@ -543,6 +543,36 @@ class MainWindow(Systray):
             
         self.client.process("stop")
 
+    def restart(self):
+        """
+        Restart the current running topology.
+        """
+        if not self.server or self.server.poll() != None:
+            self.log.append("Please start the server first!")
+            return
+        if not self.client or not self.client.isConnected():
+            self.startClient()
+        if not self.running:
+            self.log.append("Nothing is running!")
+            return
+            
+        scene = self.canvas.scene()
+        for item in scene.items():
+            if item.type == "Switch":
+                item.restart()
+        for item in scene.items():
+            if item.type == "Mobile":
+                item.restart()
+        for item in scene.items():
+            if item.type == "Router":
+                item.restart()
+        for item in scene.items():
+            if item.type == "UML":
+                item.restart()
+        for item in scene.items():
+            if item.type == "Wireless_access_point":
+                item.restart()         
+
     def stopped(self):
         """
         Handle a fully stopped topology.
@@ -850,6 +880,10 @@ class MainWindow(Systray):
         self.stopAct.setStatusTip(self.tr("Stop the current topology"))
         self.connect(self.stopAct, QtCore.SIGNAL("triggered()"), self.stop)
 
+        self.restartAct = QtGui.QAction(QtGui.QIcon(environ["images"] + "restart.png"), self.tr("&Restart"), self)
+        self.restartAct.setStatusTip(self.tr("Restart the current topology"))
+        self.connect(self.restartAct, QtCore.SIGNAL("triggered()"), self.restart)
+
         self.startServerAct = QtGui.QAction(QtGui.QIcon(environ["images"] + "startServer.png"), self.tr("&Start Server"), self)
         self.startServerAct.setShortcut(self.tr("Ctrl+T"))
         self.startServerAct.setStatusTip(self.tr("Start the server"))
@@ -942,6 +976,7 @@ class MainWindow(Systray):
         self.runMenu.addAction(self.compileAct)
         self.runMenu.addAction(self.runAct)
         self.runMenu.addAction(self.stopAct)
+        self.runMenu.addAction(self.restartAct)
         self.runMenu.addAction(self.startServerAct)
         
         self.configMenu = self.menuBar().addMenu(self.tr("&Config"))
@@ -986,6 +1021,7 @@ class MainWindow(Systray):
         self.runToolBar.addAction(self.compileAct)
         self.runToolBar.addAction(self.runAct)
         self.runToolBar.addAction(self.stopAct)
+        self.runToolBar.addAction(self.restartAct)
         self.runToolBar.addAction(self.startServerAct)
         
     def createStatusBar(self):
