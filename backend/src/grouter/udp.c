@@ -93,7 +93,10 @@ grtr_udp_send (GiniSocketAddress *dst,
 	udp->src_port = src_port;
 	udp->length = g_htons (length + sizeof (GiniUdpHeader));
 
-	memset (udp + 1, 0, ((length + 1) >> 1) >> 1);
+	// clear out rest of packet
+	memset (udp + 1, 0, ((length + 1) >> 1) << 1);
+
+	// copy data into packet
 	memcpy (udp + 1, data, length);
 
 	// prepare the packet
@@ -122,12 +125,15 @@ grtr_udp_recv (GiniSocketAddress *dst,
 	GiniUdpHeader *udp;
 	guint16 size;
 
+	// set the port we are listening on
 	g_static_mutex_lock (&grtr_udp_mutex);
 	grtr_udp_listen_port = src_port;
 	g_static_mutex_unlock (&grtr_udp_mutex);
 
+	// pop a verified packet from the queue
 	packet = g_async_queue_pop (grtr_udp_queue);
 
+	// unset the listen port
 	g_static_mutex_lock (&grtr_udp_mutex);
 	grtr_udp_listen_port = 0;
 	g_static_mutex_unlock (&grtr_udp_mutex);
@@ -137,6 +143,7 @@ grtr_udp_recv (GiniSocketAddress *dst,
 
 	length = MIN (g_ntohs (udp->length), length);
 
+	// give the data back to the caller
 	memcpy (data, udp + 1, length);
 
 	return length;
@@ -178,6 +185,7 @@ grtr_udp_process (GiniPacket *packet)
 		return;
 	}
 
+	// push the packet
 	g_async_queue_push (grtr_udp_queue, packet);
 }
 
