@@ -1,5 +1,8 @@
 GINI Toolkit ChangeLog
 
+* gBuilder:
+- Fixed placing Mobiles on Canvas
+
 gini-2.0.1
 * gBuilder:
 - Added button to remove entries from server list in Configuration window

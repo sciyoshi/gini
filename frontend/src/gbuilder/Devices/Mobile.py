@@ -1,5 +1,6 @@
 from UML import *
 from PyQt4.QtCore import QPoint
+from UI.StatsWindow import *
 
 class Mobile(UML):
     type="Mobile"
