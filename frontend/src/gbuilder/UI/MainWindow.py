@@ -393,6 +393,8 @@ class MainWindow(Systray):
         if self.server and self.server.poll() == None:
             self.log.append("A server is already running!")
             return
+        if not options["username"]:
+            self.log.append("Warning: No username is specified, please specify one in the options\n")
         
         base = "ssh -t " + options["username"] + "@" + options["server"]
         tunnel = " -L " + options["localPort"] + ":localhost:" + options["remotePort"]

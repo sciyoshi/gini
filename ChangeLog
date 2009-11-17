@@ -1,6 +1,7 @@
 GINI Toolkit ChangeLog
 
 * gBuilder:
+- Added warning for empty username field
 - Fixed placing Mobiles on Canvas
 
 gini-2.0.1
