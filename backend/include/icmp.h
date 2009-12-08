@@ -79,6 +79,9 @@ typedef struct _icmphdr_t
 } icmphdr_t;
 
 
+typedef icmphdr_t GiniIcmpHeader;
+
+
 // structure used to collect ping statistics
 typedef struct _pingstat_t
 {

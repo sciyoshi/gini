@@ -9,9 +9,11 @@
 #include "grouter.h"
 #include "routetable.h"
 #include "mtu.h"
+#include "multicast.h"
 #include "protocols.h"
 #include "ip.h"
 #include "udp.h"
+#include "igmp.h"
 #include "fragment.h"
 #include "packetcore.h"
 #include <stdlib.h>
@@ -44,12 +46,17 @@ void IPIncomingPacket(gpacket_t *in_pkt)
 	// get a pointer to the IP packet
         ip_packet_t *ip_pkt = (ip_packet_t *)&in_pkt->data.data;
 	uchar bcast_ip[] = IP_BCAST_ADDR;
-        
+
 	// Is this IP packet for me??
-	if (IPCheckPacket4Me(in_pkt))
-	{
+	if (IPCheckPacket4Me (in_pkt)) {
 		verbose(2, "[IPIncomingPacket]:: got IP packet destined to this router");
 		IPProcessMyPacket(in_pkt);
+	} else if (GINI_IP_IS_MULTICAST (ip_pkt->ip_dst)) {
+		g_debug ("incoming multicast packet");
+		if (IPVerifyPacket (ip_pkt) != EXIT_SUCCESS) {
+			return;
+		}
+		grtr_mcast_incoming (in_pkt);
 	} else if (COMPARE_IP(gNtohl(tmpbuf, ip_pkt->ip_dst), bcast_ip) == 0)
 	{           
 		// TODO: rudimentary 'broadcast IP address' check

@@ -52,14 +52,13 @@ typedef struct _interface_t
 	void *iarray;                       // pointer to interface array type
 } interface_t;
 
-
+typedef interface_t GiniInterface;
 
 typedef struct _interface_array_t
 {
 	int count;
 	interface_t *elem[MAX_INTERFACES];
 } interface_array_t;
-
 
 typedef struct _vplinfo_t
 {
@@ -77,5 +76,8 @@ interface_t *GNETMakeTapInterface(char *device, uchar *mac_addr, uchar *nw_addr)
 interface_t *findInterface(int indx);
 void *delayedServerCall(void *arg);
 void *GNETHandler(void *outq);
+
+int             grtr_iface_count (void);
+GiniInterface * grtr_iface_get   (int index);
 
 #endif //__GNET_H__

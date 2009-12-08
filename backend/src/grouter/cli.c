@@ -49,6 +49,60 @@ extern classlist_t *classifier;
 extern filtertab_t *filter;
 extern pktcore_t *pcore;
 
+typedef struct {
+	GOptionContext *context;
+	GrtrCliFunc     handler;
+} GrtrCliCommand;
+
+GHashTable *grtr_cli_cmds;
+
+void
+grtr_cli_init (void)
+{
+	grtr_cli_cmds = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, g_free);
+
+	
+}
+
+static gboolean
+grtr_cli_help (const char *name)
+{
+	GrtrCliCommand *cmd = g_hash_table_lookup (grtr_cli_cmds, name);
+
+	if (cmd) {
+		if (cmd->context) {
+			char *help = g_option_context_get_help (cmd->context, FALSE, NULL);
+
+			g_printerr ("%s", help);
+
+			g_free (help);
+		}
+
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+void
+grtr_cli_register (char         *name,
+                   GrtrCliFunc   handler,
+                   GOptionEntry  entries[])
+{
+	GrtrCliCommand *cmd = g_malloc0 (sizeof (GrtrCliCommand));
+
+	cmd->handler = handler;
+
+	if (entries) {
+		cmd->context = g_option_context_new ("");
+
+		g_option_context_set_help_enabled (cmd->context, FALSE);
+		g_option_context_add_main_entries (cmd->context, entries, NULL);
+	}
+
+	g_hash_table_insert (grtr_cli_cmds, name, cmd);
+}
+
 /*
  * This is the main routine of the CLI. Everything starts here.
  * The CLI registers and commands into a hash table and forks a thread to
@@ -96,6 +150,8 @@ int CLIInit(router_config *rarg)
 
 	registerCLI("udp", grtr_cli_udp, "", "", "");
 
+
+	
 
 
 	if (rarg->config_dir != NULL)
@@ -150,6 +206,37 @@ void parseACLICmd(char *str)
 	char *token;
 	cli_entry_t *clie;
 	char orig_str[MAX_TMPBUF_LEN];
+
+	gint argc;
+	gchar **argv;
+	GError *error = NULL;
+
+	if (!g_shell_parse_argv (str, &argc, &argv, &error)) {
+		g_printerr ("Could not parse command: %s\n", error->message);
+		g_clear_error (&error);
+		return;
+	}
+
+	if (argc > 0) {
+		GrtrCliCommand *cmd = g_hash_table_lookup (grtr_cli_cmds, argv[0]);
+
+		if (cmd) {
+			if (cmd->context) {
+				if (!g_option_context_parse (cmd->context, &argc, &argv, &error)) {
+					g_printerr ("Could not parse options: %s\n", error->message);
+					g_clear_error (&error);
+					g_strfreev (argv);
+					return;
+				}
+			}
+
+			cmd->handler (argc, argv);
+			g_strfreev (argv);
+			return;
+		}
+
+		g_strfreev (argv);
+	}
 
 	strcpy(orig_str, str);
 	token = strtok(str, " \n");
@@ -970,6 +1057,9 @@ void helpCmd()
 		CLIPrintHelp();
 	else
 	{
+		if (grtr_cli_help (next_tok))
+			return;
+
 		n_clie = (cli_entry_t *)map_get(cli_map, next_tok);
 		if (n_clie == NULL)
 			printf("ERROR! No help for command: %s \n", next_tok);

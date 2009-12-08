@@ -16,6 +16,7 @@
 
 // From IP RFC 
 #define ICMP_PROTOCOL 		    1
+#define IGMP_PROTOCOL 		    2
 #define TCP_PROTOCOL 		    6
 #define UDP_PROTOCOL 		    17
 

@@ -10,9 +10,14 @@
 #ifndef __IP_H_
 #define __IP_H_
 
-#include "grouter.h"
+#include <glib.h>
 #include <stdint.h>
 #include <endian.h>
+#include "grouter.h"
+#include "message.h"
+#include "protocols.h"
+
+#define GINI_IP_HEADER(packet) ((GiniIpHeader *) (packet->data.data))
 
 /*
  * Private definitions: only used within the IP module
@@ -54,6 +59,24 @@ typedef struct _ip_packet_t
 #define SET_MF_BITS(X)                  X = ( X | (0x00001 << 13) )
 #define RESET_DF_BITS(X)                X = ( X & (~(0x00001 << 14)) )
 #define RESET_MF_BITS(X)                X = ( X & (~(0x00001 << 13)) )
+
+
+typedef gpacket_t GiniPacket;
+typedef ip_packet_t GiniIpHeader;
+
+typedef guint32 GiniInetAddress;
+
+typedef struct {
+	guint16         port;
+	GiniInetAddress address;
+} GiniSocketAddress;
+
+typedef struct {
+	guint16 src_port;
+	guint16 dst_port;
+	guint16 length;
+	guint16 checksum;
+} GiniUdpHeader;
 
 
 // function prototypes...

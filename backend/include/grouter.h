@@ -66,8 +66,34 @@
 #define COPY_IP(DST, SRC)           ( memcpy(DST, SRC, 4) )
 #define COMPARE_MAC(X, Y)           ( memcmp(X, Y, 6) )
 #define COMPARE_IP(X, Y)            ( memcmp(X, Y, 4) )
-#define MAC_BCAST_ADDR              {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
+#define MAC_BCAST_ADDR              "\xFF\xFF\xFF\xFF\xFF\xFF"
 #define IP_BCAST_ADDR               {0xFF, 0xFF, 0xFF, 0xFF}
+
+#define GINI_IP_IS_MULTICAST(ip) ((((char *) (ip))[0] & 0xF0) == 0xE0)
+
+#define GINI_MAC_IS_BROADCAST(mac) (!memcmp ((mac), MAC_BCAST_ADDR, 6))
+
+#define GINI_MAC_IS_MULTICAST(mac) ( \
+	((char *) (mac))[0] == 0x01 && \
+	((char *) (mac))[1] == 0x00 && \
+	((char *) (mac))[2] == 0x5E && \
+	(((char *) (mac))[3] & 0x80) == 0x00)
+
+#define GINI_IP_PROTOCOL IP_PROTOCOL
+
+#define GINI_UDP_PROTOCOL UDP_PROTOCOL
+#define GINI_ICMP_PROTOCOL ICMP_PROTOCOL
+#define GINI_IGMP_PROTOCOL IGMP_PROTOCOL
+
+#define GINI_IP_HEADER_SIZE(ip) ((ip)->ip_hdr_len * 4)
+
+#define gini_ip_prepare IPPreparePacket
+#define gini_ip_outgoing IPOutgoingPacket
+#define gini_ip_send IPSend2Output
+#define gini_aton Dot2IP
+#define gini_ntoa IP2Dot
+#define gini_checksum checksum
+
 
 // check IP RFC specifications
 

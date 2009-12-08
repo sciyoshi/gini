@@ -51,6 +51,38 @@ int makePIDFile(char *rname, char rpath[]);
 void shutdownRouter();
 int isPIDAlive(int pid);
 
+/**
+ * GLib main loop thread
+ */
+
+static GThread *main_loop_thread;
+
+static gpointer
+grtr_main (gpointer data)
+{
+	GMainLoop *loop = g_main_loop_new (NULL, FALSE);
+
+	g_main_loop_run (loop);
+}
+
+static void
+grtr_init (void)
+{
+	GError *error = NULL;
+
+	g_thread_init (NULL);
+
+	grtr_cli_init ();
+	grtr_udp_init ();
+	grtr_mcast_init ();
+
+	main_loop_thread = g_thread_create (grtr_main, NULL, TRUE, &error);
+
+	if (error) {
+		g_error ("could not start main loop: %s", error->message);
+		exit (1);
+	}
+}
 
 int main(int ac, char *av[])
 {
@@ -73,7 +105,8 @@ int main(int ac, char *av[])
 	ARPInit();
 	IPInit();
 
-	grtr_udp_init ();
+	grtr_init ();
+
 
 	classifier = createClassifier();
 	filter = createFilter(classifier, 0);
@@ -97,6 +130,7 @@ int main(int ac, char *av[])
 	// start the CLI..
 	CLIInit(&(rconfig));
 
+	g_thread_join (main_loop_thread);
 
 	wait4thread(rconfig.scheduler);
 	wait4thread(rconfig.worker);

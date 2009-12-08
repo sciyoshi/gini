@@ -46,7 +46,7 @@ gini_icmp_send (GiniPacket   *packet,
 	icmp->checksum = g_htons (gini_checksum ((guchar *) icmp, DEST_UNREACHABLE_SIZE(ip) / 2));
 
 	// set the return address
-	dst.address = g_ntohl (((GiniInetAddress *) ip->ip_src)->address);
+	dst = g_ntohl (*(GiniInetAddress *) (ip->ip_src));
 
 	// send it out
 	gini_ip_outgoing (packet, (guchar *) &dst, DEST_UNREACHABLE_SIZE(ip), 1, GINI_ICMP_PROTOCOL);
@@ -192,8 +192,6 @@ grtr_udp_process (GiniPacket *packet)
 void
 grtr_udp_init (void)
 {
-	g_thread_init (NULL);
-
 	grtr_udp_queue = g_async_queue_new ();
 }
 
@@ -258,3 +256,4 @@ grtr_cli_udp (gchar *cmd)
 
 	g_strfreev (argv);
 }
+

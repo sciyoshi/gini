@@ -112,6 +112,11 @@ void GNETInitInterfaces()
 		netarray.elem[i] = NULL;
 }
 
+int
+grtr_iface_count (void)
+{
+	return netarray.count;
+}
 
 /*
  * shutdown all interfaces.. used at router shutdown..
@@ -187,6 +192,13 @@ int deleteInterface(int indx)
  * is direct mapped! We need to search the table if we want to find interfaces
  * by IP address or MAC address or any other parameter.
  */
+
+GiniInterface *
+grtr_iface_get (int index)
+{
+	return netarray.elem[index];
+}
+
 
 interface_t *findInterface(int indx)
 {
