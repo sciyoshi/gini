@@ -47,6 +47,9 @@ void IPIncomingPacket(gpacket_t *in_pkt)
         ip_packet_t *ip_pkt = (ip_packet_t *)&in_pkt->data.data;
 	uchar bcast_ip[] = IP_BCAST_ADDR;
 
+	in_pkt->net = (void *) in_pkt->data.data;
+	in_pkt->transp = in_pkt->net + in_pkt->ip->ip_hdr_len * 4;
+
 	// Is this IP packet for me??
 	if (IPCheckPacket4Me (in_pkt)) {
 		verbose(2, "[IPIncomingPacket]:: got IP packet destined to this router");
@@ -345,6 +348,8 @@ int IPPreparePacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int sr
 	uchar iface_ip_addr[4];
 	int status;
 
+	pkt->net = (void *) ip_pkt;
+
 	ip_pkt->ip_ttl = 64;                        // set TTL to default value
 	ip_pkt->ip_cksum = 0;                       // reset the checksum field                
 	ip_pkt->ip_prot = src_prot;  // set the protocol field
@@ -400,6 +405,8 @@ int IPPreparePacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int sr
 	cksum = checksum((uchar *)ip_pkt, ip_pkt->ip_hdr_len*2);
 	ip_pkt->ip_cksum = htons(cksum);
 	pkt->data.header.prot = htons(IP_PROTOCOL);
+
+	pkt->transp = pkt->net + ip_pkt->ip_hdr_len * 4;
 
 	return EXIT_SUCCESS;
 }

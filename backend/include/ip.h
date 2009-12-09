@@ -13,8 +13,10 @@
 #include <glib.h>
 #include <stdint.h>
 #include <endian.h>
+
+typedef struct _GiniIpHeader GiniIpHeader, ip_packet_t;
+
 #include "grouter.h"
-#include "message.h"
 #include "protocols.h"
 
 #define GINI_IP_HEADER(packet) ((GiniIpHeader *) (packet->data.data))
@@ -29,8 +31,7 @@
  * Definitions for internet protocol version 4.
  * Per RFC 791, September 1981.
  */
-typedef struct _ip_packet_t
-{
+struct _GiniIpHeader {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 	uint8_t ip_hdr_len:4;                   // header length 
 	uint8_t ip_version:4;                   // version 
@@ -51,7 +52,7 @@ typedef struct _ip_packet_t
 	uint8_t ip_prot;                        // protocol 
 	uint16_t ip_cksum;                      // checksum 
 	uchar ip_src[4], ip_dst[4];             // source and dest address 
-} ip_packet_t;
+};
 
 #define TEST_DF_BITS(X)                 ( (X & IP_DF) >> 14)
 #define TEST_MF_BITS(X)                 ( (X & IP_MF) >> 13)
@@ -60,8 +61,6 @@ typedef struct _ip_packet_t
 #define RESET_DF_BITS(X)                X = ( X & (~(0x00001 << 14)) )
 #define RESET_MF_BITS(X)                X = ( X & (~(0x00001 << 13)) )
 
-
-typedef ip_packet_t GiniIpHeader;
 
 typedef guint32 GiniInetAddress;
 

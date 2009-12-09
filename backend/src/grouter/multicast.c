@@ -104,8 +104,8 @@ gini_mcast_clean_expired (gpointer data)
 void
 gini_mcast_incoming (GiniPacket *packet)
 {
-	if (GINI_IP_HEADER (packet)->ip_prot == GINI_IGMP_PROTOCOL) {
-		grtr_igmp_process (packet);
+	if (packet->ip->ip_prot == GINI_IGMP_PROTOCOL) {
+		gini_igmp_process (packet);
 	}
 }
 
@@ -167,7 +167,7 @@ gini_mcast_cli (int argc, char *argv[])
 void
 gini_mcast_init (void)
 {
-	grtr_igmp_init ();
+	gini_igmp_init ();
 
 	grtr_cli_register ("mcast", gini_mcast_cli, NULL);
 

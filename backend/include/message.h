@@ -10,16 +10,18 @@
 #define __MESSAGE_H__
 
 #include <sys/types.h>
+
+typedef struct _GiniPacket GiniPacket, gpacket_t;
+
 #include "grouter.h"
 
+#include "ip.h"
+#include "igmp.h"
 
 #define MAX_IPREVLENGTH_ICMP            50       // maximum previous header sent back
-
-
 #define MAX_MESSAGE_SIZE                sizeof(gpacket_t)
 
-
-typedef struct {
+struct _GiniPacket {
 	struct {
 		int src_interface;               // incoming interface number; filled in by gnet?
 		uchar src_ip_addr[4];            // source IP address; required for ARP, IP, gnet
@@ -30,6 +32,16 @@ typedef struct {
 		int arp_bcast;
 	} frame;
 
+	union {
+		GiniIpHeader *ip;
+		guchar       *net;
+	};
+
+	union {
+		GiniIgmpHeader *igmp;
+		guchar         *transp;
+	};
+
 	struct {
 		struct {
 			uchar dst[6];                // destination host's MAC address (filled by gnet)
@@ -37,9 +49,15 @@ typedef struct {
 			ushort prot;                // protocol field
 		} header;
 
-		uchar data[DEFAULT_MTU];             // payload (limited to maximum MTU)
+		union {
+			struct {
+				GiniIpHeader ip_header;
+			};
+
+			uchar data[DEFAULT_MTU];             // payload (limited to maximum MTU)
+		};
 	} data;
-} GiniPacket, gpacket_t;
+};
 
 
 gpacket_t *duplicatePacket(gpacket_t *inpkt);

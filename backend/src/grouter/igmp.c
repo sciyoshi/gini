@@ -2,7 +2,7 @@
 #include "gnet.h"
 
 static gboolean
-grtr_igmp_query (gpointer data)
+gini_igmp_query (gpointer data)
 {
 	int i;
 
@@ -60,21 +60,16 @@ grtr_igmp_query (gpointer data)
 }
 
 void
-grtr_igmp_init (void)
+gini_igmp_init (void)
 {
-	g_timeout_add_seconds (15, grtr_igmp_query, NULL);
+	g_timeout_add_seconds (15, gini_igmp_query, NULL);
 }
 
 void
-grtr_igmp_process (GiniPacket *packet)
+gini_igmp_process (GiniPacket *packet)
 {
-	GiniIpHeader *ip = GINI_IP_HEADER (packet);
-	GiniIgmpHeader *igmp = (GiniIgmpHeader *) ((char *) ip + ip->ip_hdr_len * 4);
-
-	g_debug ("version: 0x%.1X", igmp->version);
-	g_debug ("type: 0x%.1X", igmp->type);
-	g_debug ("unused: 0x%.2X", igmp->_unused);
-	g_debug ("address: 0x%.4X", igmp->group_address);
+	GiniIpHeader *ip = packet->ip;
+	GiniIgmpHeader *igmp = packet->igmp;
 
 	if (gini_checksum ((char *) igmp, sizeof (GiniIgmpHeader) / 2) != 0) {
 		g_debug ("dropping IGMP packet with invalid checksum: 0x%.4X", gini_checksum ((char *) igmp, sizeof (GiniIgmpHeader) / 2));

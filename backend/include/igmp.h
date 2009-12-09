@@ -3,7 +3,10 @@
 
 #include <glib.h>
 
+typedef struct _GiniIgmpHeader GiniIgmpHeader;
+
 #include "grouter.h"
+#include "message.h"
 #include "ip.h"
 #include "protocols.h"
 
@@ -16,17 +19,17 @@ typedef enum {
 	GINI_IGMP_MESSAGE_TYPE_REPORT = 2,
 } GiniIgmpMessageType;
 
-typedef struct {
+struct _GiniIgmpHeader {
 	guint8 type : 4;
 	guint8 version : 4;
 	guint8 _unused;
 	guint16 checksum;
 	guint32 group_address;
-} GiniIgmpHeader;
+};
 
-void grtr_igmp_init (void);
+void gini_igmp_init (void);
 
-void grtr_igmp_process (GiniPacket *packet);
+void gini_igmp_process (GiniPacket *packet);
 
 #endif
 
