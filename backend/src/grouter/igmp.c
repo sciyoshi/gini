@@ -9,26 +9,19 @@ gini_igmp_query (gpointer data)
 	g_debug ("sending IGMP query on all interfaces...");
 
 	for (i = 0; i < MAX_INTERFACES; i++) {
-		GiniInterface *iface = grtr_iface_get (i);
+		GiniInterface *iface = gini_iface_get (i);
 
 		if (!iface) {
 			continue;
 		} else {
-			GiniPacket *packet = g_malloc0 (sizeof (GiniPacket));
-			GiniIpHeader *ip = GINI_IP_HEADER (packet);
-			GiniIgmpHeader *igmp = (GiniIgmpHeader *) (ip + 1);
-
-			ip->ip_version = 4;
-			ip->ip_hdr_len = 5;
-			ip->ip_tos = 0;
-			ip->ip_identifier = IP_OFFMASK & random ();
-			RESET_DF_BITS (ip->ip_frag_off);
-			RESET_MF_BITS (ip->ip_frag_off);
-			ip->ip_frag_off = 0;
+			GiniPacket *packet = gini_packet_new ();
+			GiniIpHeader *ip = packet->ip;
+			GiniIgmpHeader *igmp = packet->igmp;
 
 			ip->ip_ttl = 1;
-			ip->ip_cksum = 0;
 			ip->ip_prot = GINI_IGMP_PROTOCOL;
+
+			/* should be handled by IP layer */
 			ip->ip_pkt_len = g_htons (sizeof (GiniIgmpHeader) + ip->ip_hdr_len * 4);
 
 			*(guint32 *) ip->ip_dst = *(guint32 *) GINI_IGMP_ALL_HOSTS_GROUP;
@@ -42,7 +35,6 @@ gini_igmp_query (gpointer data)
 			packet->data.header.dst[2] = 0x5E;
 			*(guint32 *) (packet->data.header.dst + 2) |= 0x7FFFFF & *(guint32 *) GINI_IGMP_ALL_HOSTS_GROUP;
 
-			packet->data.header.prot = g_htons (GINI_IP_PROTOCOL);
 			packet->frame.dst_interface = i;
 			packet->frame.arp_valid = TRUE;
 
@@ -79,7 +71,7 @@ gini_igmp_process (GiniPacket *packet)
 	if (igmp->type == GINI_IGMP_MESSAGE_TYPE_QUERY) {
 		g_debug ("ignoring IGMP Query");
 	} else if (igmp->type == GINI_IGMP_MESSAGE_TYPE_REPORT) {
-		GiniInterface *iface = grtr_iface_get (packet->frame.src_interface);
+		GiniInterface *iface = gini_iface_get (packet->frame.src_interface);
 
 		if (!iface) {
 			g_warning ("packet received on invalid interface!?");

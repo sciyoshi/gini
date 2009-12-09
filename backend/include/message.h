@@ -16,6 +16,7 @@ typedef struct _GiniPacket GiniPacket, gpacket_t;
 #include "grouter.h"
 
 #include "ip.h"
+#include "udp.h"
 #include "igmp.h"
 
 #define MAX_IPREVLENGTH_ICMP            50       // maximum previous header sent back
@@ -38,6 +39,7 @@ struct _GiniPacket {
 	};
 
 	union {
+		GiniUdpHeader  *udp;
 		GiniIgmpHeader *igmp;
 		guchar         *transp;
 	};
@@ -58,6 +60,10 @@ struct _GiniPacket {
 		};
 	} data;
 };
+
+GiniPacket *gini_packet_new (void);
+
+GiniPacket *gini_packet_copy (GiniPacket *packet);
 
 
 gpacket_t *duplicatePacket(gpacket_t *inpkt);

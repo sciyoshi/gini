@@ -69,13 +69,12 @@ typedef struct {
 	GiniInetAddress address;
 } GiniSocketAddress;
 
-typedef struct {
-	guint16 src_port;
-	guint16 dst_port;
-	guint16 length;
-	guint16 checksum;
-} GiniUdpHeader;
+#define gini_ip_prepare IPPreparePacket
+#define gini_ip_outgoing IPOutgoingPacket
+#define gini_ip_send IPSend2Output
 
+
+int gini_ip_send_fragmented (GiniPacket *packet);
 
 // function prototypes...
 

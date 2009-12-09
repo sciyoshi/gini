@@ -113,7 +113,7 @@ void GNETInitInterfaces()
 }
 
 int
-grtr_iface_count (void)
+gini_iface_count (void)
 {
 	return netarray.count;
 }
@@ -194,7 +194,7 @@ int deleteInterface(int indx)
  */
 
 GiniInterface *
-grtr_iface_get (int index)
+gini_iface_get (int index)
 {
 	return netarray.elem[index];
 }

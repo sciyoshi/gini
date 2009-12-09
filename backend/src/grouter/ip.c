@@ -135,7 +135,6 @@ int IPProcessForwardingPacket(gpacket_t *in_pkt)
 {
 	gpacket_t *pkt_frags[MAX_FRAGMENTS];
 	ip_packet_t *ip_pkt = (ip_packet_t *)in_pkt->data.data;
-	int num_frags, i, need_frag;
 	char tmpbuf[MAX_TMPBUF_LEN];
  
 	verbose(2, "[IPProcessForwardingPacket]:: checking for any IP errors..");
@@ -157,18 +156,29 @@ int IPProcessForwardingPacket(gpacket_t *in_pkt)
 	// TODO: Check the RFC for conformance??
 	IPCheck4Redirection(in_pkt);
 
+	return gini_ip_send_fragmented (in_pkt);
+}
+
+int
+gini_ip_send_fragmented (GiniPacket *packet)
+{
+	gpacket_t *pkt_frags[MAX_FRAGMENTS];
+	ip_packet_t *ip_pkt = packet->ip;
+	int num_frags, i, need_frag;
+	char tmpbuf[MAX_TMPBUF_LEN];
+	
 	// check for fragmentation -- this should return three conditions:
 	// FRAGS_NONE, FRAGS_ERROR, MORE_FRAGS
-	need_frag = IPCheck4Fragmentation(in_pkt);
+	need_frag = IPCheck4Fragmentation(packet);
 
 	switch (need_frag)
 	{
 	case FRAGS_NONE:
 		verbose(2, "[IPProcessForwardingPacket]:: sending packet to GNET..");
 		// compute the checksum before sending out.. the fragmentation routine does this inside it.
-		ip_pkt->ip_cksum = 0;
-		ip_pkt->ip_cksum = htons(checksum((uchar *)ip_pkt, ip_pkt->ip_hdr_len *2));
-		if (IPSend2Output(in_pkt) == EXIT_FAILURE)
+		packet->ip->ip_cksum = 0;
+		packet->ip->ip_cksum = htons(checksum((uchar *)packet->ip, packet->ip->ip_hdr_len *2));
+		if (IPSend2Output(packet) == EXIT_FAILURE)
 		{
 			verbose(1, "[IPProcessForwardingPacket]:: WARNING: IPProcessForwardingPacket(): Could not forward packets ");
 			return EXIT_FAILURE;
@@ -177,13 +187,13 @@ int IPProcessForwardingPacket(gpacket_t *in_pkt)
 
 	case FRAGS_ERROR:
 		verbose(2, "[IPProcessForwardingPacket]:: unreachable on packet from %s",
-			IP2Dot(tmpbuf, gNtohl((tmpbuf+20), ip_pkt->ip_src)));
-		ICMPProcessFragNeeded(in_pkt);
+			IP2Dot(tmpbuf, gNtohl((tmpbuf+20), packet->ip->ip_src)));
+		ICMPProcessFragNeeded(packet->ip);
 		break;
 
 	case MORE_FRAGS:
 		// fragment processing... 
-		num_frags = fragmentIPPacket(in_pkt, pkt_frags);
+		num_frags = fragmentIPPacket(packet->ip, pkt_frags);
 
 		verbose(2, "[IPProcessForwardingPacket]:: IP packet needs fragmentation");
 		// forward each fragment

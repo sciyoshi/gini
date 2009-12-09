@@ -80,7 +80,7 @@ gini_mcast_clean_expired (gpointer data)
 		g_tree_foreach (gini_mcast_memberships[i], (GTraverseFunc) add_expired, &info);
 
 		while (info.expired) {
-			GiniInterface *iface = grtr_iface_get (i);
+			GiniInterface *iface = gini_iface_get (i);
 
 			if (iface) {
 				g_debug ("removing membership on interface %s to multicast group %s",
@@ -106,6 +106,21 @@ gini_mcast_incoming (GiniPacket *packet)
 {
 	if (packet->ip->ip_prot == GINI_IGMP_PROTOCOL) {
 		gini_igmp_process (packet);
+	} else {
+		int i;
+
+		for (i = 0; i < MAX_INTERFACES; i++) {
+			GiniInterface *iface = gini_iface_get (i);
+			GTree *memberships = gini_mcast_memberships[i];
+
+			if (!iface || !memberships || i == packet->frame.src_interface) {
+				continue;
+			}
+
+			if (g_tree_lookup_extended (memberships, packet->ip->ip_dst, NULL, NULL)) {
+				g_debug ("forwarding to interface %s", iface->device_name);
+			}
+		}
 	}
 }
 
@@ -152,7 +167,7 @@ gini_mcast_cli (int argc, char *argv[])
 	for (i = 0; i < MAX_INTERFACES; i++) {
 		GTree *memberships = gini_mcast_memberships[i];
 
-		info.iface = grtr_iface_get (i);
+		info.iface = gini_iface_get (i);
 
 		if (!info.iface || !memberships) {
 			continue;

@@ -60,8 +60,8 @@ static gushort gini_udp_listen_port = 0;
 gushort
 gini_udp_checksum (GiniPacket *packet)
 {
-	GiniIpHeader *ip = (GiniIpHeader *) (packet->data.data);
-	GiniUdpHeader *udp = (GiniUdpHeader *) (ip + 1);
+	GiniIpHeader *ip = packet->ip;
+	GiniUdpHeader *udp = packet->udp;
 	guint32 checksum;
 
 	// calculate the checksum
@@ -84,8 +84,8 @@ gini_udp_send (GiniSocketAddress *dst,
 	guint32 checksum;
 
 	GiniPacket *packet = g_new0 (GiniPacket, 1);
-	GiniIpHeader *ip = (GiniIpHeader *) (packet->data.data);
-	GiniUdpHeader *udp = (GiniUdpHeader *) (ip + 1);
+	GiniIpHeader *ip = packet->ip = (GiniIpHeader *) (packet->data.data);
+	GiniUdpHeader *udp = packet->udp = (GiniUdpHeader *) (ip + 1);
 
 	g_return_if_fail (length + sizeof (GiniUdpHeader) <= G_MAXUINT16);
 
@@ -152,8 +152,8 @@ gini_udp_recv (GiniSocketAddress *dst,
 void
 gini_udp_process (GiniPacket *packet)
 {
-	GiniIpHeader *ip = (GiniIpHeader *) (packet->data.data);
-	GiniUdpHeader *udp = (GiniUdpHeader *) (ip + 1);
+	GiniIpHeader *ip = packet->ip;
+	GiniUdpHeader *udp = packet->udp;
 
 	gushort port;
 

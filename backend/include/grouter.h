@@ -87,9 +87,6 @@
 
 #define GINI_IP_HEADER_SIZE(ip) ((ip)->ip_hdr_len * 4)
 
-#define gini_ip_prepare IPPreparePacket
-#define gini_ip_outgoing IPOutgoingPacket
-#define gini_ip_send IPSend2Output
 #define gini_aton Dot2IP
 #define gini_ntoa IP2Dot
 #define gini_checksum checksum

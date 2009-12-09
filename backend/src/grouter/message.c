@@ -9,6 +9,38 @@
 #include "ip.h"
 #include "arp.h"
 
+GiniPacket *
+gini_packet_new (void)
+{
+	GiniPacket *packet = g_malloc0 (sizeof (GiniPacket));
+
+	packet->data.header.prot = g_htons (GINI_IP_PROTOCOL);
+
+	packet->net = (void *) packet->data.data;
+
+	packet->ip->ip_version = 4;
+	packet->ip->ip_hdr_len = 5;
+	packet->ip->ip_tos = 0;
+	packet->ip->ip_ttl = 64;
+	packet->ip->ip_identifier = IP_OFFMASK & random();
+	RESET_DF_BITS(packet->ip->ip_frag_off);
+	RESET_MF_BITS(packet->ip->ip_frag_off);
+	packet->ip->ip_frag_off = 0;
+
+	packet->transp = packet->net + packet->ip->ip_hdr_len * 4;
+
+	return packet;
+}
+
+GiniPacket *
+gini_packet_copy (GiniPacket *packet)
+{
+	GiniPacket *copy = g_malloc (sizeof (GiniPacket));
+
+	memcpy (copy, packet, sizeof (GiniPacket));
+
+	return copy;
+}
 
 gpacket_t *duplicatePacket(gpacket_t *inpkt)
 {

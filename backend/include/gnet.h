@@ -77,7 +77,7 @@ interface_t *findInterface(int indx);
 void *delayedServerCall(void *arg);
 void *GNETHandler(void *outq);
 
-int             grtr_iface_count (void);
-GiniInterface * grtr_iface_get   (int index);
+int             gini_iface_count (void);
+GiniInterface * gini_iface_get   (int index);
 
 #endif //__GNET_H__
