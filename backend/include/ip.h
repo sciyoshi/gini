@@ -61,7 +61,6 @@ typedef struct _ip_packet_t
 #define RESET_MF_BITS(X)                X = ( X & (~(0x00001 << 13)) )
 
 
-typedef gpacket_t GiniPacket;
 typedef ip_packet_t GiniIpHeader;
 
 typedef guint32 GiniInetAddress;

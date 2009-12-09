@@ -90,7 +90,7 @@ void* fromTapDev(void *arg)
 		}
 
 		bzero(in_pkt, sizeof(gpacket_t));
-		pktsize = tap_recvfrom(iface->vpl_data, &(in_pkt->data), sizeof(pkt_data_t));
+		pktsize = tap_recvfrom(iface->vpl_data, &(in_pkt->data), sizeof(in_pkt->data));
 		pthread_testcancel();
 
 		// check whether the incoming packet is a layer 2 broadcast or

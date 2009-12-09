@@ -26,20 +26,20 @@ extern filtertab_t *filter;
 
 extern router_config rconfig;
 
-int findPacketSize(pkt_data_t *pkt)
+int findPacketSize(GiniPacket *pkt)
 {
 	ip_packet_t *ip_pkt;
 
-	if (pkt->header.prot == htons(IP_PROTOCOL))
+	if (pkt->data.header.prot == htons(IP_PROTOCOL))
 	{
-		ip_pkt = (ip_packet_t *) pkt->data;
+		ip_pkt = (ip_packet_t *) pkt->data.data;
 		return (14 + ntohs(ip_pkt->ip_pkt_len));
-	} else if (pkt->header.prot == htons(ARP_PROTOCOL))
+	} else if (pkt->data.header.prot == htons(ARP_PROTOCOL))
 		return 42;
 	// above assumes IP and ARP; we can compute this length by
 	// reading the address lengths from the packet.
 	else
-		return sizeof(pkt_data_t);
+		return sizeof(pkt->data);
 }
 
 
@@ -62,7 +62,7 @@ void *toEthernetDev(void *arg)
 			COPY_MAC(apkt->src_hw_addr, iface->mac_addr);
 			COPY_IP(apkt->src_ip_addr, gHtonl(tmpbuf, iface->ip_addr));
 		}
-		pkt_size = findPacketSize(&(inpkt->data));
+		pkt_size = findPacketSize(inpkt);
 		verbose(2, "[toEthernetDev]:: vpl_sendto called for interface %d..%d bytes written ", iface->interface_id, pkt_size);
 		vpl_sendto(iface->vpl_data, &(inpkt->data), pkt_size);
 		free(inpkt);          // finally destroy the memory allocated to the packet..
@@ -97,7 +97,7 @@ void* fromEthernetDev(void *arg)
 		}
 
 		bzero(in_pkt, sizeof(gpacket_t));
-		vpl_recvfrom(iface->vpl_data, &(in_pkt->data), sizeof(pkt_data_t));
+		vpl_recvfrom(iface->vpl_data, &(in_pkt->data), sizeof(in_pkt->data));
 		pthread_testcancel();
 		// check whether the incoming packet is a layer 2 broadcast or
 		// meant for this node... otherwise should be thrown..
