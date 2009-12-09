@@ -4,8 +4,12 @@
 
 static GTree *gini_mcast_memberships[MAX_INTERFACES];
 
+/**
+ * Multicast group membership management
+ */
+
 static gint
-grtr_inet_address_cmp (GiniInetAddress a,
+gini_inet_address_cmp (GiniInetAddress a,
                        GiniInetAddress b)
 {
 	return a - b;
@@ -20,7 +24,7 @@ gini_mcast_membership_add (GiniInterface   *interface,
 	GTree **memberships = gini_mcast_memberships + interface->interface_id;
 
 	if (!*memberships) {
-		*memberships = g_tree_new ((GCompareFunc) grtr_inet_address_cmp);
+		*memberships = g_tree_new ((GCompareFunc) gini_inet_address_cmp);
 	}
 
 	g_get_current_time (&time);
@@ -93,6 +97,10 @@ gini_mcast_clean_expired (gpointer data)
 	return TRUE;
 }
 
+/**
+ * Multicast packet handling
+ */
+
 void
 gini_mcast_incoming (GiniPacket *packet)
 {
@@ -100,6 +108,10 @@ gini_mcast_incoming (GiniPacket *packet)
 		grtr_igmp_process (packet);
 	}
 }
+
+/**
+ * CLI functions
+ */
 
 static GOptionEntry gini_mcast_cli_entries[] = {
 	{ NULL }
