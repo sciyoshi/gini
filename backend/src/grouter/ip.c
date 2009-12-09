@@ -56,7 +56,7 @@ void IPIncomingPacket(gpacket_t *in_pkt)
 		if (IPVerifyPacket (ip_pkt) != EXIT_SUCCESS) {
 			return;
 		}
-		grtr_mcast_incoming (in_pkt);
+		gini_mcast_incoming (in_pkt);
 	} else if (COMPARE_IP(gNtohl(tmpbuf, ip_pkt->ip_dst), bcast_ip) == 0)
 	{           
 		// TODO: rudimentary 'broadcast IP address' check
@@ -333,7 +333,7 @@ int IPProcessMyPacket(gpacket_t *in_pkt)
 int UDPProcess(gpacket_t *in_pkt)
 {
 	verbose(2, "[UDPProcess]:: packet received for processing.. ");
-	grtr_udp_process (in_pkt);
+	gini_udp_process (in_pkt);
 	return EXIT_SUCCESS;
 }
 

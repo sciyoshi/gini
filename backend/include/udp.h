@@ -9,19 +9,19 @@
 #include "icmp.h"
 #include "protocols.h"
 
-void  grtr_udp_send    (GiniSocketAddress *dst,
+void  gini_udp_send    (GiniSocketAddress *dst,
                         guint16            src_port,
                         gchar             *data,
                         gsize              length);
 
-gsize grtr_udp_recv    (GiniSocketAddress *dst,
+gsize gini_udp_recv    (GiniSocketAddress *dst,
                         guint16            src_port,
                         gchar             *data,
                         gsize              length);
 
-void  grtr_udp_process (GiniPacket *packet);
+void  gini_udp_process (GiniPacket *packet);
 
-void  grtr_udp_init    (void);
+void  gini_udp_init    (void);
 
 void  grtr_cli_udp     (gchar *cmd);
 

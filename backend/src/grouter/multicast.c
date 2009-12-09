@@ -2,7 +2,7 @@
 #include "igmp.h"
 #include "cli.h"
 
-static GTree *grtr_mcast_memberships[MAX_INTERFACES];
+static GTree *gini_mcast_memberships[MAX_INTERFACES];
 
 static gint
 grtr_inet_address_cmp (GiniInetAddress a,
@@ -12,12 +12,12 @@ grtr_inet_address_cmp (GiniInetAddress a,
 }
 
 void
-grtr_mcast_membership_add (GiniInterface   *interface,
+gini_mcast_membership_add (GiniInterface   *interface,
                            GiniInetAddress  group_address)
 {
 	GTimeVal time;
 	gchar tmp1[64], tmp2[64];
-	GTree **memberships = grtr_mcast_memberships + interface->interface_id;
+	GTree **memberships = gini_mcast_memberships + interface->interface_id;
 
 	if (!*memberships) {
 		*memberships = g_tree_new ((GCompareFunc) grtr_inet_address_cmp);
@@ -33,10 +33,10 @@ grtr_mcast_membership_add (GiniInterface   *interface,
 }
 
 void
-grtr_mcast_membership_remove (GiniInterface   *interface,
+gini_mcast_membership_remove (GiniInterface   *interface,
                               GiniInetAddress  group_address)
 {
-	GTree *memberships = grtr_mcast_memberships[interface->interface_id];
+	GTree *memberships = gini_mcast_memberships[interface->interface_id];
 
 	if (memberships) {
 		g_tree_remove (memberships, GINT_TO_POINTER (group_address));
@@ -59,7 +59,7 @@ add_expired (GiniInetAddress  group_address,
 }
 
 static gboolean
-grtr_mcast_clean_expired (gpointer data)
+gini_mcast_clean_expired (gpointer data)
 {
 	ExpireInfo info;
 	char tmp1[64], tmp2[64];
@@ -69,11 +69,11 @@ grtr_mcast_clean_expired (gpointer data)
 	info.expired = NULL;
 
 	for (i = 0; i < MAX_INTERFACES; i++) {
-		if (!grtr_mcast_memberships[i]) {
+		if (!gini_mcast_memberships[i]) {
 			continue;
 		}
 
-		g_tree_foreach (grtr_mcast_memberships[i], (GTraverseFunc) add_expired, &info);
+		g_tree_foreach (gini_mcast_memberships[i], (GTraverseFunc) add_expired, &info);
 
 		while (info.expired) {
 			GiniInterface *iface = grtr_iface_get (i);
@@ -83,7 +83,7 @@ grtr_mcast_clean_expired (gpointer data)
 					gini_ntoa (tmp1, iface->ip_addr),
 					gini_ntoa (tmp2, (char *) &(info.expired->data)));
 
-				grtr_mcast_membership_remove (iface, GPOINTER_TO_INT (info.expired->data));
+				gini_mcast_membership_remove (iface, GPOINTER_TO_INT (info.expired->data));
 			}
 
 			info.expired = g_slist_delete_link (info.expired, info.expired);
@@ -94,14 +94,14 @@ grtr_mcast_clean_expired (gpointer data)
 }
 
 void
-grtr_mcast_incoming (GiniPacket *packet)
+gini_mcast_incoming (GiniPacket *packet)
 {
 	if (GINI_IP_HEADER (packet)->ip_prot == GINI_IGMP_PROTOCOL) {
 		grtr_igmp_process (packet);
 	}
 }
 
-static GOptionEntry grtr_mcast_cli_entries[] = {
+static GOptionEntry gini_mcast_cli_entries[] = {
 	{ NULL }
 };
 
@@ -125,7 +125,7 @@ print_membership (GiniInetAddress  group_address,
 }
 
 static void
-grtr_mcast_cli (int argc, char *argv[])
+gini_mcast_cli (int argc, char *argv[])
 {
 	MembershipInfo info;
 	int i;
@@ -138,7 +138,7 @@ grtr_mcast_cli (int argc, char *argv[])
 	g_printf ("----------+-------------------+-------------------+-------------\n");
 
 	for (i = 0; i < MAX_INTERFACES; i++) {
-		GTree *memberships = grtr_mcast_memberships[i];
+		GTree *memberships = gini_mcast_memberships[i];
 
 		info.iface = grtr_iface_get (i);
 
@@ -153,12 +153,12 @@ grtr_mcast_cli (int argc, char *argv[])
 }
 
 void
-grtr_mcast_init (void)
+gini_mcast_init (void)
 {
 	grtr_igmp_init ();
 
-	grtr_cli_register ("mcast", grtr_mcast_cli, NULL);
+	grtr_cli_register ("mcast", gini_mcast_cli, NULL);
 
-	g_timeout_add_seconds (30, (GSourceFunc) grtr_mcast_clean_expired, NULL);
+	g_timeout_add_seconds (30, (GSourceFunc) gini_mcast_clean_expired, NULL);
 }
 

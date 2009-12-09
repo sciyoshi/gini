@@ -52,10 +52,10 @@ gini_icmp_send (GiniPacket   *packet,
 	gini_ip_outgoing (packet, (guchar *) &dst, DEST_UNREACHABLE_SIZE(ip), 1, GINI_ICMP_PROTOCOL);
 }
 
-static GStaticMutex grtr_udp_mutex = G_STATIC_MUTEX_INIT;
+static GStaticMutex gini_udp_mutex = G_STATIC_MUTEX_INIT;
 
-static GAsyncQueue *grtr_udp_queue;
-static gushort grtr_udp_listen_port = 0;
+static GAsyncQueue *gini_udp_queue;
+static gushort gini_udp_listen_port = 0;
 
 gushort
 gini_udp_checksum (GiniPacket *packet)
@@ -76,7 +76,7 @@ gini_udp_checksum (GiniPacket *packet)
 }
 
 void
-grtr_udp_send (GiniSocketAddress *dst,
+gini_udp_send (GiniSocketAddress *dst,
                guint16            src_port,
                gchar             *data,
                gsize              length)
@@ -115,7 +115,7 @@ grtr_udp_send (GiniSocketAddress *dst,
 }
 
 gsize
-grtr_udp_recv (GiniSocketAddress *dst,
+gini_udp_recv (GiniSocketAddress *dst,
                guint16            src_port,
                gchar             *data,
                gsize              length)
@@ -126,17 +126,17 @@ grtr_udp_recv (GiniSocketAddress *dst,
 	guint16 size;
 
 	// set the port we are listening on
-	g_static_mutex_lock (&grtr_udp_mutex);
-	grtr_udp_listen_port = src_port;
-	g_static_mutex_unlock (&grtr_udp_mutex);
+	g_static_mutex_lock (&gini_udp_mutex);
+	gini_udp_listen_port = src_port;
+	g_static_mutex_unlock (&gini_udp_mutex);
 
 	// pop a verified packet from the queue
-	packet = g_async_queue_pop (grtr_udp_queue);
+	packet = g_async_queue_pop (gini_udp_queue);
 
 	// unset the listen port
-	g_static_mutex_lock (&grtr_udp_mutex);
-	grtr_udp_listen_port = 0;
-	g_static_mutex_unlock (&grtr_udp_mutex);
+	g_static_mutex_lock (&gini_udp_mutex);
+	gini_udp_listen_port = 0;
+	g_static_mutex_unlock (&gini_udp_mutex);
 
 	ip = (GiniIpHeader *) (packet->data.data);
 	udp = (GiniUdpHeader *) (ip + 1);
@@ -150,7 +150,7 @@ grtr_udp_recv (GiniSocketAddress *dst,
 }
 
 void
-grtr_udp_process (GiniPacket *packet)
+gini_udp_process (GiniPacket *packet)
 {
 	GiniIpHeader *ip = (GiniIpHeader *) (packet->data.data);
 	GiniUdpHeader *udp = (GiniUdpHeader *) (ip + 1);
@@ -167,9 +167,9 @@ grtr_udp_process (GiniPacket *packet)
 		}
 	}
 
-	g_static_mutex_lock (&grtr_udp_mutex);
-	port = grtr_udp_listen_port;
-	g_static_mutex_unlock (&grtr_udp_mutex);
+	g_static_mutex_lock (&gini_udp_mutex);
+	port = gini_udp_listen_port;
+	g_static_mutex_unlock (&gini_udp_mutex);
 
 	// in a more complex system, might need to do lookup in a table of waiting processes
 	// and push to appropriate queue
@@ -186,13 +186,13 @@ grtr_udp_process (GiniPacket *packet)
 	}
 
 	// push the packet
-	g_async_queue_push (grtr_udp_queue, packet);
+	g_async_queue_push (gini_udp_queue, packet);
 }
 
 void
-grtr_udp_init (void)
+gini_udp_init (void)
 {
-	grtr_udp_queue = g_async_queue_new ();
+	gini_udp_queue = g_async_queue_new ();
 }
 
 static guint local_port = 0;
@@ -243,10 +243,10 @@ grtr_cli_udp (gchar *cmd)
 			break;
 		}
 
-		grtr_udp_send (&dst, g_htons (local_port), buffer, strlen (buffer));
+		gini_udp_send (&dst, g_htons (local_port), buffer, strlen (buffer));
 
 		if (local_port != 0) {
-			len = grtr_udp_recv (&dst, g_htons (local_port), buffer, LINE_MAX);
+			len = gini_udp_recv (&dst, g_htons (local_port), buffer, LINE_MAX);
 		}
 
 		buffer[len] = '\0';

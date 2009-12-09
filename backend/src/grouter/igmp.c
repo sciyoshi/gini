@@ -97,7 +97,7 @@ grtr_igmp_process (GiniPacket *packet)
 			return;
 		}
 
-		grtr_mcast_membership_add (iface, g_ntohl (igmp->group_address));
+		gini_mcast_membership_add (iface, g_ntohl (igmp->group_address));
 	} else {
 		g_debug ("silently dropping unknown IGMP message type");
 	}

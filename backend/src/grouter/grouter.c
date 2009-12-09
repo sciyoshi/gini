@@ -73,8 +73,8 @@ grtr_init (void)
 	g_thread_init (NULL);
 
 	grtr_cli_init ();
-	grtr_udp_init ();
-	grtr_mcast_init ();
+	gini_udp_init ();
+	gini_mcast_init ();
 
 	main_loop_thread = g_thread_create (grtr_main, NULL, TRUE, &error);
 

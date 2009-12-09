@@ -13,12 +13,12 @@
  */
 #define GRTR_MCAST_MEMBERSHIP_EXPIRATION_TIME 30
 
-void grtr_mcast_incoming (GiniPacket *packet);
+void gini_mcast_incoming (GiniPacket *packet);
 
-void grtr_mcast_membership_add (GiniInterface   *interface,
+void gini_mcast_membership_add (GiniInterface   *interface,
                                 GiniInetAddress  group_address);
 
-void grtr_mcast_membership_remove (GiniInterface   *interface,
+void gini_mcast_membership_remove (GiniInterface   *interface,
                                    GiniInetAddress  group_address);
 
 #endif
