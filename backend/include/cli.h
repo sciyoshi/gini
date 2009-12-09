@@ -45,14 +45,6 @@ typedef struct _cli_entry_t
 	void (*handler)();
 } cli_entry_t;
 
-typedef void (* GrtrCliFunc) (int argc, char *argv[]);
-
-void grtr_cli_init     (void);
-
-void grtr_cli_register (char         *name,
-                        GrtrCliFunc   handler,
-                        GOptionEntry  entries[]);
-
 // function prototypes...
 void dummyFunction();
 void parseACLICmd(char *str);
@@ -82,6 +74,14 @@ void spolicyCmd();
 void classCmd();
 void filterCmd();
 
+/* NEW API */
 
+typedef void (* GrtrCliFunc) (int argc, char *argv[]);
+
+void grtr_cli_init     (void);
+
+void grtr_cli_register (char         *name,
+                        GrtrCliFunc   handler,
+                        GOptionEntry  entries[]);
 
 #endif

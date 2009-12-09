@@ -106,7 +106,7 @@ void* fromEthernetDev(void *arg)
 			(!GINI_MAC_IS_MULTICAST (in_pkt->data.header.dst)) &&
 			(!GINI_MAC_IS_BROADCAST (in_pkt->data.header.dst)))
 		{
-			verbose(1, "[fromEthernetDev]:: Packet dropped .. not for this router!? ");
+			verbose(2, "[fromEthernetDev]:: Packet dropped .. not for this router!? ");
 			free(in_pkt);
 			continue;
 		}

@@ -85,7 +85,6 @@ grtr_igmp_process (GiniPacket *packet)
 		g_debug ("ignoring IGMP Query");
 	} else if (igmp->type == GINI_IGMP_MESSAGE_TYPE_REPORT) {
 		GiniInterface *iface = grtr_iface_get (packet->frame.src_interface);
-		char tmp1[64], tmp2[64];
 
 		if (!iface) {
 			g_warning ("packet received on invalid interface!?");
@@ -98,13 +97,7 @@ grtr_igmp_process (GiniPacket *packet)
 			return;
 		}
 
-		*(guint32 *) tmp2 = g_ntohl (igmp->group_address);
-
-		g_debug ("membership report on interface %s to multicast group %s",
-			gini_ntoa (tmp1, iface->ip_addr),
-			gini_ntoa (tmp2, tmp2));
-
-		grtr_mcast_membership_add (iface, igmp->group_address);
+		grtr_mcast_membership_add (iface, g_ntohl (igmp->group_address));
 	} else {
 		g_debug ("silently dropping unknown IGMP message type");
 	}

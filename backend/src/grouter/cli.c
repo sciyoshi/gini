@@ -49,6 +49,13 @@ extern classlist_t *classifier;
 extern filtertab_t *filter;
 extern pktcore_t *pcore;
 
+static gboolean print_help = FALSE;
+
+static GOptionEntry help_entries[] = {
+	{ "help", '?', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &print_help, "Show help options", 0 },
+	{ NULL }
+};
+
 typedef struct {
 	GOptionContext *context;
 	GrtrCliFunc     handler;
@@ -60,8 +67,43 @@ void
 grtr_cli_init (void)
 {
 	grtr_cli_cmds = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, g_free);
+}
 
-	
+static gboolean
+grtr_cli_handle (int      argc,
+                 char    *argv[],
+                 GError **error)
+{
+	GrtrCliCommand *cmd = g_hash_table_lookup (grtr_cli_cmds, argv[0]);
+
+	if (cmd) {
+		if (cmd->context) {
+			print_help = FALSE;
+
+			if (!g_option_context_parse (cmd->context, &argc, &argv, error)) {
+				return FALSE;
+			}
+
+			if (print_help) {
+#ifdef g_option_context_get_help_with_prgname
+				char *help = g_option_context_get_help_with_prgname (cmd->context, FALSE, NULL, argv[0]);
+#else
+				char *help = g_option_context_get_help (cmd->context, FALSE, NULL);
+#endif
+
+				g_printerr ("%s", help);
+
+				g_free (help);
+
+				return TRUE;
+			}
+		}
+
+		cmd->handler (argc, argv);
+		return TRUE;
+	}
+
+	return FALSE;
 }
 
 static gboolean
@@ -97,6 +139,7 @@ grtr_cli_register (char         *name,
 		cmd->context = g_option_context_new ("");
 
 		g_option_context_set_help_enabled (cmd->context, FALSE);
+		g_option_context_add_main_entries (cmd->context, help_entries, NULL);
 		g_option_context_add_main_entries (cmd->context, entries, NULL);
 	}
 
@@ -217,25 +260,20 @@ void parseACLICmd(char *str)
 		return;
 	}
 
-	if (argc > 0) {
-		GrtrCliCommand *cmd = g_hash_table_lookup (grtr_cli_cmds, argv[0]);
+	if (argc < 0) {
+		return;
+	}
 
-		if (cmd) {
-			if (cmd->context) {
-				if (!g_option_context_parse (cmd->context, &argc, &argv, &error)) {
-					g_printerr ("Could not parse options: %s\n", error->message);
-					g_clear_error (&error);
-					g_strfreev (argv);
-					return;
-				}
-			}
+	if (grtr_cli_handle (argc, argv, &error)) {
+		return;
+	}
 
-			cmd->handler (argc, argv);
-			g_strfreev (argv);
-			return;
-		}
+	g_strfreev (argv);
 
-		g_strfreev (argv);
+	if (error) {
+		g_printerr ("Could not parse options: %s\n", error->message);
+		g_clear_error (&error);
+		return;
 	}
 
 	strcpy(orig_str, str);
