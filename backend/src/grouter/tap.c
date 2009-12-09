@@ -73,7 +73,6 @@ void *toTapDev(void *arg)
 void* fromTapDev(void *arg)
 {
 	interface_t *iface = (interface_t *) arg;
-	interface_array_t *iarr = (interface_array_t *)iface->iarray;
 	uchar bcast_mac[] = MAC_BCAST_ADDR;
 	char *pkttag;
 	gpacket_t *in_pkt;

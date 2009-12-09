@@ -75,7 +75,7 @@ int findMTU(mtu_entry_t mtable[], GiniInterface * iface)
  * returns EXIT_FAILURE if the entry is not found in the MTU table.
  * Otherwise, EXIT_SUCCESS is returned and the ip_addr is copied
  */
-int findInterfaceIP(mtu_entry_t mtable[], GiniInterface * iface, 
+int gini_iface_getIP(mtu_entry_t mtable[], GiniInterface * iface, 
 		    uchar *ip_addr)
 {
 	int index = iface->interface_id;

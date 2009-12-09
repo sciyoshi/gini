@@ -384,7 +384,7 @@ int IPPreparePacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int sr
 
 		verbose(2, "[IPOutgoingPacket]:: lookup MTU of nexthop");
 		// lookup the IP address of the destination interface..
-		if ((status = findInterfaceIP(MTU_tbl, pkt->frame.dst_iface,
+		if ((status = gini_iface_getIP(MTU_tbl, pkt->frame.dst_iface,
 					      iface_ip_addr)) == EXIT_FAILURE)
 					      return EXIT_FAILURE; 
 		// the outgoing packet should have the interface IP as source

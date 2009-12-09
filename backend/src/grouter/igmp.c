@@ -9,7 +9,7 @@ grtr_igmp_query (gpointer data)
 	g_debug ("sending IGMP query on all interfaces...");
 
 	for (i = 0; i < MAX_INTERFACES; i++) {
-		GiniInterface *iface = grtr_iface_get (i);
+		GiniInterface *iface = gini_iface_get (i);
 
 		if (!iface) {
 			continue;

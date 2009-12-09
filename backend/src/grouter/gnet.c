@@ -7,6 +7,8 @@
  * VERSION: 1.0
  */
 
+#include <glib.h>
+
 #include "devicedefs.h"
 #include "gnet.h"
 #include "arp.h"
@@ -25,7 +27,8 @@
 
 extern route_entry_t route_tbl[MAX_ROUTES];
 
-interface_array_t netarray;
+GList *interfaces = NULL;
+
 devicearray_t devarray;
 arp_entry_t arp_cache[ARP_CACHE_SIZE];
 
@@ -98,112 +101,112 @@ void initPhysicalLayer(char *config_dir, char *rname)
  *             I N T E R F A C E  M A N A G E M E N T  F U N C T I O N S
  *---------------------------------------------------------------------------------*/
 
-
-/*
- * Initialize interface arrays and device arrays
- */
-void GNETInitInterfaces()
+static int
+gini_iface_cmp_id (GiniInterface *a, int id)
 {
-	int i;
+	return a->interface_id - id;
+}
 
+static int
+gini_iface_cmp (GiniInterface *a, GiniInterface *b)
+{
+	return a->interface_id - b->interface_id;
+}
+
+
+void
+gini_iface_init (void)
+{
 	createAllDevices(&devarray);
-	netarray.count = 0;
-	for (i=0; i < MAX_INTERFACES; i++)
-		netarray.elem[i] = NULL;
 }
 
 int
-grtr_iface_count (void)
+gini_iface_count (void)
 {
-	return netarray.count;
+	return g_list_length (interfaces);
 }
 
-/*
- * shutdown all interfaces.. used at router shutdown..
- */
-void haltInterfaces()
+GiniInterface *
+gini_iface_get (int index)
 {
-	int i;
+	GList *item = g_list_find_custom (interfaces, GINT_TO_POINTER (index), (GCompareFunc) gini_iface_cmp_id);
 
-	for (i = 0; i < MAX_INTERFACES; i++)
-		destroyInterface(netarray.elem[i]);
+	return item ? (GiniInterface *) item->data : NULL;
 }
 
-
-
-int getNextInterfaceID(void)
+void
+gini_iface_halt (void)
 {
-	int nextid;
-
-	nextid = netarray.count++;
-	if (nextid >= MAX_INTERFACES)
-	{
-		error("[getNextInterfaceID]:: Cannot create another interface: No empty slots ");
-		return -1;
+	while (interfaces) {
+		gini_iface_destroy((GiniInterface *) interfaces->data);
 	}
-	return nextid;
 }
 
-
-/*
- * insert the given interface into the Interface table
- */
-void GNETInsertInterface(interface_t *iface)
+void
+gini_iface_add (GiniInterface *iface)
 {
-	int ifid = iface->interface_id;
-
-	if (netarray.elem[ifid] != NULL)
-	{
-		verbose(1, "[insertInterface]:: Cannot create interface.. delete exiting one first ");
+	if (gini_iface_get (iface->interface_id) != NULL) {
+		g_warning ("[insertInterface]:: Cannot create interface.. delete exiting one first ");
 		return;
 	}
-	netarray.elem[ifid] = iface;
-	netarray.count++;
+
+	interfaces = g_list_insert_sorted (interfaces, iface, (GCompareFunc) gini_iface_cmp);
 }
 
-
-/*
- * returns EXIT_SUCCESS if the element was removed.
- * Otherwise returns EXIT_FAILURE.
- */
-int deleteInterface(int indx)
+int
+gini_iface_delete (int index)
 {
+	GiniInterface *iface = gini_iface_get (iface->interface_id);
 
-	if (indx > MAX_INTERFACES)
-	{
-		verbose(1, "[deleteInterface]:: Specified index: Out of range ");
+	if (!iface) {
+		g_warning ("[gini_iface_delete]:: Specified index: Out of range ");
 		return EXIT_FAILURE;
 	}
 
-	// release memory;
-	free(netarray.elem[indx]);
+	free (iface);
 
-	// delete slot...
-	netarray.elem[indx] = NULL;
-	if (netarray.count > 0) netarray.count--;
+	interfaces = g_list_remove (interfaces, iface);
 
 	return EXIT_SUCCESS;
 }
 
-
-
-/*
- * findInterface... this is pretty simple because the interface table
- * is direct mapped! We need to search the table if we want to find interfaces
- * by IP address or MAC address or any other parameter.
- */
-
-GiniInterface *
-grtr_iface_get (int index)
+int
+gini_iface_destroy_by_index (int index)
 {
-	return netarray.elem[index];
+	return gini_iface_destroy (gini_iface_get (index));
 }
 
-
-interface_t *findInterface(int indx)
+int
+gini_iface_destroy (GiniInterface *iface)
 {
-	return netarray.elem[indx];
+	if (!iface)
+		return EXIT_FAILURE;
+
+	// remove the routing table entries...
+	deleteRouteEntryByInterface(route_tbl, iface->interface_id);
+
+	// remove the ARP table entries
+	ARPDeleteEntry(iface->ip_addr);
+
+	verbose(2, "[gini_iface_destroy]:: cancelling the fromdev handler.. ");
+	if (iface->state == INTERFACE_UP) {
+		pthread_cancel(iface->threadid);        // cancel the running thread
+		// close socket
+		close(iface->iface_fd);
+	}
+
+	verbose(2, "[gini_iface_destroy]:: cancelling the shadow thread.. ");
+	if (iface->mode == IFACE_SERVER_MODE) {
+		pthread_cancel(iface->sdwthread);      // cancel the shadow thread
+		unlink(iface->sock_name);
+	}
+
+	// remove interface from table...
+	gini_iface_delete (iface->interface_id);
+
+	return EXIT_SUCCESS;
 }
+
 
 
 void printHorLine(int mode)
@@ -231,7 +234,7 @@ void printHorLine(int mode)
  */
 void printInterfaces(int mode)
 {
-	int i;
+	GList *i;
 	interface_t *ifptr;
 	char tmpbuf[MAX_TMPBUF_LEN];
 
@@ -248,30 +251,28 @@ void printInterfaces(int mode)
 			printf("Int.\tState/Mode\tDevice\tIP address\tMAC address\t\tMTU\tSocket Name\tThread ID\n");
 			break;
 	}
-	for (i = 0; i < MAX_INTERFACES; i++)
-		if (netarray.elem[i] != NULL)
+	for (i = interfaces; i != NULL; i = i->next) {
+		ifptr = (GiniInterface *) i->data;
+		switch (mode)
 		{
-			ifptr = netarray.elem[i];
-			switch (mode)
-			{
-				case NORMAL_LISTING:
-					printf("%s\t%c\t%s\t%s\t%d\n", ifptr->device_name,
-					       ifptr->state, IP2Dot(tmpbuf, ifptr->ip_addr),
-					       MAC2Colon((tmpbuf+20), ifptr->mac_addr),
-					       ifptr->device_mtu);
-					break;
-				case VERBOSE_LISTING:
-					printf("%d\t%c%c\t\t%s\t%s\t%s\t%d\t%s\t%d\n", ifptr->interface_id,
-					       ifptr->state, ifptr->mode,
-					       ifptr->device_name,
-					       IP2Dot(tmpbuf, ifptr->ip_addr),
-					       MAC2Colon((tmpbuf+20), ifptr->mac_addr),
-					       ifptr->device_mtu,
-					       ifptr->sock_name,
-					       (int) ifptr->threadid);
-					break;
-			}
+			case NORMAL_LISTING:
+				printf("%s\t%c\t%s\t%s\t%d\n", ifptr->device_name,
+				       ifptr->state, IP2Dot(tmpbuf, ifptr->ip_addr),
+				       MAC2Colon((tmpbuf+20), ifptr->mac_addr),
+				       ifptr->device_mtu);
+				break;
+			case VERBOSE_LISTING:
+				printf("%d\t%c%c\t\t%s\t%s\t%s\t%d\t%s\t%d\n", ifptr->interface_id,
+				       ifptr->state, ifptr->mode,
+				       ifptr->device_name,
+				       IP2Dot(tmpbuf, ifptr->ip_addr),
+				       MAC2Colon((tmpbuf+20), ifptr->mac_addr),
+				       ifptr->device_mtu,
+				       ifptr->sock_name,
+				       (int) ifptr->threadid);
+				break;
 		}
+	}
 	printHorLine(mode);
 	printf("\n\n");
 	return;
@@ -316,7 +317,6 @@ interface_t *newInterfaceStructure(char *vsock_name, char *device,
 
 	verbose(2, "[makeInterface]:: Searching the device driver for %s ", iface->device_type);
 	iface->devdriver = findDeviceDriver(iface->device_type);
-	iface->iarray = &netarray;
 
 	return iface;
 }
@@ -354,7 +354,7 @@ interface_t *GNETMakeEthInterface(char *vsock_name, char *device,
 
 	iface_id = gAtoi(device);
 	vi = (vplinfo_t *)malloc(sizeof(vplinfo_t));
-	if (findInterface(iface_id) != NULL)
+	if (gini_iface_get(iface_id) != NULL)
 	{
 		verbose(1, "[GNETMakeEthInterface]:: device %s already defined.. ", device);
 		return NULL;
@@ -436,7 +436,7 @@ interface_t *GNETMakeTapInterface(char *device, uchar *mac_addr, uchar *nw_addr)
 
 	iface_id = gAtoi(device);
 
-	if (findInterface(iface_id) != NULL)
+	if (gini_iface_get(iface_id) != NULL)
 	{
 		verbose(1, "[GNETMakeTapInterface]:: device %s already defined.. ", device);
 		return NULL;
@@ -491,64 +491,13 @@ void *delayedServerCall(void *arg)
 
 
 /*
- * destroyInterface by Index...
- */
-int destroyInterfaceByIndex(int indx)
-{
-	return destroyInterface(findInterface(indx));
-}
-
-
-/*
- * destroyInterface(): remove the specified interface from the router.
- * The router should remove associated route table information, ARP entries,
- * and stop the threads (only fromXDevice thread).
- */
-int destroyInterface(interface_t *iface)
-{
-
-	// nothing to do if iface is NULL
-	if (iface == NULL)
-		return EXIT_FAILURE;
-
-	verbose(2, "[destroyInterface]:: entering the function..");
-	// remove the routing table entries...
-	deleteRouteEntryByInterface(route_tbl, iface->interface_id);
-
-	// remove the ARP table entries
-	ARPDeleteEntry(iface->ip_addr);
-
-	verbose(2, "[destroyInterface]:: cancelling the fromdev handler.. ");
-	if (iface->state == INTERFACE_UP)
-	{
-		pthread_cancel(iface->threadid);        // cancel the running thread
-		// close socket
-		close(iface->iface_fd);
-	}
-
-	verbose(2, "[destroyInterface]:: cancelling the shadow thread.. ");
-	if (iface->mode == IFACE_SERVER_MODE)
-	{
-		pthread_cancel(iface->sdwthread);      // cancel the shadow thread
-		unlink(iface->sock_name);
-	}
-
-	// remove interface from table...
-	deleteInterface(iface->interface_id);
-
-	return EXIT_SUCCESS;
-}
-
-
-
-/*
  * change the MTU value of the interface
  */
 int changeInterfaceMTU(int index, int new_mtu)
 {
 	interface_t *iface;
 
-	iface = findInterface(index);
+	iface = gini_iface_get(index);
 	if (iface == NULL)
 	{
 		error("[changeInterface]:: Interface %d not found.. unable to change MTU ", index);
@@ -603,7 +552,7 @@ int upInterface(int index)
 {
 	interface_t *iface;
 
-	iface = findInterface(index);
+	iface = gini_iface_get(index);
 	if (iface == NULL)
 	{
 		error("[upInterface]:: Interface %d not found.. unable to bring up ", index);
@@ -621,7 +570,7 @@ int downInterface(int index)
 {
 	interface_t *iface;
 
-	iface = findInterface(index);
+	iface = gini_iface_get(index);
 	if (iface == NULL)
 	{
 		error("[downInterface]:: Interface %d not found ..unable to take down ", index);
@@ -723,7 +672,7 @@ void printARPCache(void)
 void GNETHalt(int gnethandler)
 {
 	verbose(2, "[gnetHalt]:: Shutting down GNET handler.. \n");
-	haltInterfaces();
+	gini_iface_halt();
 	pthread_cancel(gnethandler);
 }
 
@@ -743,7 +692,7 @@ int GNETInit(int *ghandler, char *config_dir, char *rname, simplequeue_t *sq)
 
 	// do the initializations...
 	vpl_init(config_dir, rname);
-	GNETInitInterfaces();
+	gini_iface_init ();
  	GNETInitARPCache();
 
 	thread_stat = pthread_create((pthread_t *)ghandler, NULL, GNETHandler, (void *)sq);

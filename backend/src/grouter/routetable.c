@@ -58,7 +58,7 @@ int findRouteEntry(route_entry_t route_tbl[], uchar *ip_addr, uchar *nhop, GiniI
 			else
 				COPY_IP(nhop, route_tbl[icount].nexthop);
 
-			*ixface = grtr_iface_get (route_tbl[icount].interface);
+			*ixface = gini_iface_get (route_tbl[icount].interface);
 
 			return EXIT_SUCCESS;
 		}
@@ -180,7 +180,7 @@ void printRouteTable(route_entry_t route_tbl[])
 	for (i = 0; i < MAX_ROUTES; i++)
 		if (route_tbl[i].is_empty != TRUE)
 		{
-			iface = findInterface(route_tbl[i].interface);
+			iface = gini_iface_get(route_tbl[i].interface);
 			printf("[%d]\t%s\t%s\t%s\t\t%s\n", i, IP2Dot(tmpbuf, route_tbl[i].network),
 			       IP2Dot((tmpbuf+20), route_tbl[i].netmask), IP2Dot((tmpbuf+40), route_tbl[i].nexthop), iface->device_name);
 			rcount++;

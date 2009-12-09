@@ -551,7 +551,7 @@ void ifconfigCmd()
 		if (iface != NULL)
 		{
 			verbose(2, "[configureInterfaces]:: Inserting the definition in the interface table ");
-			GNETInsertInterface(iface);
+			gini_iface_add(iface);
 			addMTUEntry(MTU_tbl, iface->interface_id, iface->device_mtu, iface->ip_addr);
 			// for tap0 interface the MTU value cannot be changed. should we allow change?
 		}
@@ -561,7 +561,7 @@ void ifconfigCmd()
 		GET_THIS_OR_THIS_PARAMETER("eth", "tap", "ifconfig:: missing interface spec ..");
 		strcpy(dev_name, next_tok);
 		interface = gAtoi(next_tok);
-		destroyInterfaceByIndex(interface);
+		gini_iface_destroy_by_index(interface);
 		deleteMTUEntry(interface);
 	}
 	else if (!strcmp(next_tok, "up"))

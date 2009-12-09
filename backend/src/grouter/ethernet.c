@@ -82,7 +82,6 @@ void *toEthernetDev(void *arg)
 void* fromEthernetDev(void *arg)
 {
 	interface_t *iface = (interface_t *) arg;
-	interface_array_t *iarr = (interface_array_t *)iface->iarray;
 	char *pkttag;
 	gpacket_t *in_pkt;
 

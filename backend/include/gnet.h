@@ -48,7 +48,6 @@ struct _GiniInterface {
 	pthread_t threadid;					// thread ID assigned to this interface
 	pthread_t sdwthread;
 	device_t *devdriver;				// the device driver that include toXDev and fromXDev functions
-	void *iarray;                       // pointer to interface array type
 };
 
 typedef struct _interface_array_t
@@ -70,11 +69,11 @@ typedef struct _vplinfo_t
 interface_t *GNETMakeEthInterface(char *vsock_name, char *device,
 			   uchar *mac_addr, uchar *nw_addr, int iface_mtu, int cforce);
 interface_t *GNETMakeTapInterface(char *device, uchar *mac_addr, uchar *nw_addr);
-interface_t *findInterface(int indx);
+interface_t *gini_iface_get(int indx);
 void *delayedServerCall(void *arg);
 void *GNETHandler(void *outq);
 
-int             grtr_iface_count (void);
-GiniInterface * grtr_iface_get   (int index);
+int             gini_iface_count (void);
+GiniInterface * gini_iface_get   (int index);
 
 #endif //__GNET_H__

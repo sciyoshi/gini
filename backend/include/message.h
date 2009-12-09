@@ -24,6 +24,7 @@ struct _GiniPacket {
 	struct {
 		GiniInterface *src_iface;
 		GiniInterface *dst_iface;
+
 		//int src_interface;               // incoming interface number; filled in by gnet?
 		uchar src_ip_addr[4];            // source IP address; required for ARP, IP, gnet
 		uchar src_hw_addr[6];            // source MAC address; required for ARP, filled by gnet
