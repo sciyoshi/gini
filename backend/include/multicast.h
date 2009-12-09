@@ -18,5 +18,8 @@ void grtr_mcast_incoming (GiniPacket *packet);
 void grtr_mcast_membership_add (GiniInterface   *interface,
                                 GiniInetAddress  group_address);
 
+void grtr_mcast_membership_remove (GiniInterface   *interface,
+                                   GiniInetAddress  group_address);
+
 #endif
 
