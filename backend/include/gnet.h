@@ -7,14 +7,14 @@
 #define __GNET_H__
 
 
-// all includes go here!
+#include <pthread.h>
+
+typedef struct _GiniInterface GiniInterface, interface_t;
+
 #include "grouter.h"
 #include "vpl.h"
 #include "device.h"
 #include "message.h"
-#include <pthread.h>
-
-
 
 #define	MAX_INTERFACES					20      // max number of interfaces supported
 
@@ -33,8 +33,7 @@
  * mode, the server socket will automatically update the state once the remote
  * node initiates the connection.
  */
-typedef struct _interface_t
-{
+struct _GiniInterface {
 	int interface_id;					// interface identifier
 	int state;                          // active OR inactive
 	int mode;                       	// client OR server mode
@@ -50,9 +49,7 @@ typedef struct _interface_t
 	pthread_t sdwthread;
 	device_t *devdriver;				// the device driver that include toXDev and fromXDev functions
 	void *iarray;                       // pointer to interface array type
-} interface_t;
-
-typedef interface_t GiniInterface;
+};
 
 typedef struct _interface_array_t
 {

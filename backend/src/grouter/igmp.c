@@ -43,7 +43,7 @@ grtr_igmp_query (gpointer data)
 			*(guint32 *) (packet->data.header.dst + 2) |= 0x7FFFFF & *(guint32 *) GINI_IGMP_ALL_HOSTS_GROUP;
 
 			packet->data.header.prot = g_htons (GINI_IP_PROTOCOL);
-			packet->frame.dst_interface = i;
+			packet->frame.dst_iface = iface;
 			packet->frame.arp_valid = TRUE;
 
 			igmp->version = GINI_IGMP_VERSION;
@@ -84,7 +84,7 @@ grtr_igmp_process (GiniPacket *packet)
 	if (igmp->type == GINI_IGMP_MESSAGE_TYPE_QUERY) {
 		g_debug ("ignoring IGMP Query");
 	} else if (igmp->type == GINI_IGMP_MESSAGE_TYPE_REPORT) {
-		GiniInterface *iface = grtr_iface_get (packet->frame.src_interface);
+		GiniInterface *iface = packet->frame.src_iface;
 
 		if (!iface) {
 			g_warning ("packet received on invalid interface!?");

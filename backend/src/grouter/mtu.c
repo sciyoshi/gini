@@ -5,6 +5,7 @@
  */
 
 #include "mtu.h"
+#include "gnet.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -60,8 +61,9 @@ void printMTUTable(mtu_entry_t mtable[])
  * Find the MTU of the given interface. Return -1 if the interface
  * was not found in the table
  */
-int findMTU(mtu_entry_t mtable[], int index)
+int findMTU(mtu_entry_t mtable[], GiniInterface * iface)
 {
+	int index = iface->interface_id;
 	if (mtable[index].is_empty != TRUE) 
 		return mtable[index].mtu;
 	verbose(2, "[findMTU]:: No entry found in MTU table for index %d ", index);
@@ -73,9 +75,10 @@ int findMTU(mtu_entry_t mtable[], int index)
  * returns EXIT_FAILURE if the entry is not found in the MTU table.
  * Otherwise, EXIT_SUCCESS is returned and the ip_addr is copied
  */
-int findInterfaceIP(mtu_entry_t mtable[], int index, 
+int findInterfaceIP(mtu_entry_t mtable[], GiniInterface * iface, 
 		    uchar *ip_addr)
 {
+	int index = iface->interface_id;
 	if (mtable[index].is_empty != TRUE)
 	{
 		COPY_IP(ip_addr, mtable[index].ip_addr);

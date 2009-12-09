@@ -150,7 +150,7 @@ void ARPProcess(gpacket_t *pkt)
 		// prepare for sending. Set some parameters that is going to be used
 		// by the GNET adapter...
 
-		pkt->frame.dst_interface = pkt->frame.src_interface;
+		pkt->frame.dst_iface = pkt->frame.src_iface;
 
 		COPY_MAC(pkt->data.header.dst, pkt->data.header.src);
 		COPY_MAC(pkt->data.header.src,  pkt->frame.src_hw_addr);

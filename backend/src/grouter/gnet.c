@@ -772,9 +772,9 @@ void *GNETHandler(void *outq)
 		verbose(2, "[gnetHandler]:: Recvd message pkt ");
 		pthread_testcancel();
 
-		if ((iface = findInterface(in_pkt->frame.dst_interface)) == NULL)
+		if ((iface = in_pkt->frame.dst_iface) == NULL)
 		{
-			error("[gnetHandler]:: Packet dropped, interface [%d] is invalid ", in_pkt->frame.dst_interface);
+			error("[gnetHandler]:: Packet dropped, interface [%d] is invalid ", in_pkt->frame.dst_iface->interface_id);
 			continue;
 		} else if (iface->state == INTERFACE_DOWN)
 		{

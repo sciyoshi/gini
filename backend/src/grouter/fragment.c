@@ -35,7 +35,7 @@ int needFragmentation(gpacket_t *pkt)
 	int link_mtu;
 
 	verbose(2, "[needFragmentation]:: Checking whether the packet needs fragmentation.. ");
-	link_mtu = findMTU(MTU_tbl, pkt->frame.dst_interface);
+	link_mtu = findMTU(MTU_tbl, pkt->frame.dst_iface);
 	if (link_mtu < ntohs(ip_pkt->ip_pkt_len))                 // need fragmentation
 		return 1;
 	else
@@ -59,7 +59,7 @@ int fragmentIPPacket(gpacket_t *pkt, gpacket_t **frags)
 	ip_packet_t *this_ippkt;
 	uchar *ipdata_ptr;
 
-	link_mtu = findMTU(MTU_tbl, pkt->frame.dst_interface);
+	link_mtu = findMTU(MTU_tbl, pkt->frame.dst_iface);
 	
 	num_frags = (int) ceil(((double) ntohs(ip_pkt->ip_pkt_len))/((double) link_mtu));
 	frag_len = ntohs(ip_pkt->ip_pkt_len)/num_frags;

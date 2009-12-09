@@ -145,7 +145,7 @@ int IPProcessForwardingPacket(gpacket_t *in_pkt)
 	// ICMP network/host unreachable message -- CHECK??
 	if (findRouteEntry(route_tbl, gNtohl(tmpbuf, ip_pkt->ip_dst),
 			   in_pkt->frame.nxth_ip_addr, 
-			   &(in_pkt->frame.dst_interface)) == EXIT_FAILURE)
+			   &(in_pkt->frame.dst_iface)) == EXIT_FAILURE)
 		return EXIT_FAILURE;
 
 	// check for redirection?? -- the output interface is already found 
@@ -244,9 +244,9 @@ int IPCheck4Fragmentation(gpacket_t *in_pkt)
 	ip_packet_t *ip_pkt = (ip_packet_t *)in_pkt->data.data;
 
 	verbose(2, "[IPCheck4Fragmentation]:: .. checking mtu for next hop %s and interface %d ", 
-		IP2Dot(tmpbuf, in_pkt->frame.nxth_ip_addr), in_pkt->frame.dst_interface);
+		IP2Dot(tmpbuf, in_pkt->frame.nxth_ip_addr), in_pkt->frame.dst_iface->interface_id);
 
-	if ((link_mtu = findMTU(MTU_tbl, in_pkt->frame.dst_interface)) < 0)
+	if ((link_mtu = findMTU(MTU_tbl, in_pkt->frame.dst_iface)) < 0)
 		return GENERAL_ERROR;
 	
 	if (link_mtu < ntohs(ip_pkt->ip_pkt_len))                 // need fragmentation
@@ -358,7 +358,7 @@ int IPPreparePacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int sr
 		// find the nexthop and interface and fill them in the "meta" frame		
 		// NOTE: the packet itself is not modified by this lookup!
 		if (findRouteEntry(route_tbl, gNtohl(tmpbuf, ip_pkt->ip_dst), 
-				   pkt->frame.nxth_ip_addr, &(pkt->frame.dst_interface)) == EXIT_FAILURE)
+				   pkt->frame.nxth_ip_addr, &(pkt->frame.dst_iface)) == EXIT_FAILURE)
 				   return EXIT_FAILURE;
 
 	} else if (newflag == 1)
@@ -379,12 +379,12 @@ int IPPreparePacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int sr
 		// find the nexthop and interface and fill them in the "meta" frame		
 		// NOTE: the packet itself is not modified by this lookup!
 		if (findRouteEntry(route_tbl, gNtohl(tmpbuf, ip_pkt->ip_dst), 
-				   pkt->frame.nxth_ip_addr, &(pkt->frame.dst_interface)) == EXIT_FAILURE)
+				   pkt->frame.nxth_ip_addr, &(pkt->frame.dst_iface)) == EXIT_FAILURE)
 				   return EXIT_FAILURE; 
 
 		verbose(2, "[IPOutgoingPacket]:: lookup MTU of nexthop");
 		// lookup the IP address of the destination interface..
-		if ((status = findInterfaceIP(MTU_tbl, pkt->frame.dst_interface,
+		if ((status = findInterfaceIP(MTU_tbl, pkt->frame.dst_iface,
 					      iface_ip_addr)) == EXIT_FAILURE)
 					      return EXIT_FAILURE; 
 		// the outgoing packet should have the interface IP as source

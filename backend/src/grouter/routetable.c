@@ -32,7 +32,7 @@ int rtbl_replace_indx;         // indicate which entry in routing table should b
  * Result stored in pbNhop and ppsInterfaceRet
  * Returns NO_ERROR if match found, ERROR if no match found
  */
-int findRouteEntry(route_entry_t route_tbl[], uchar *ip_addr, uchar *nhop, int *ixface)
+int findRouteEntry(route_entry_t route_tbl[], uchar *ip_addr, uchar *nhop, GiniInterface **ixface)
 {
 	int icount;
 	uchar null_ip_addr[] = {0, 0, 0, 0};
@@ -58,7 +58,7 @@ int findRouteEntry(route_entry_t route_tbl[], uchar *ip_addr, uchar *nhop, int *
 			else
 				COPY_IP(nhop, route_tbl[icount].nexthop);
 
-			*ixface = route_tbl[icount].interface;
+			*ixface = grtr_iface_get (route_tbl[icount].interface);
 
 			return EXIT_SUCCESS;
 		}

@@ -41,10 +41,10 @@ void printGPktFrame(gpacket_t *msg, char *routine)
 	char tmpbuf[MAX_TMPBUF_LEN];
 
 	printf("\n    P A C K E T  F R A M E  S E C T I O N of GPACKET @ %s \n", routine);
-	printf(" SRC interface : \t %d\n", msg->frame.src_interface);
+	printf(" SRC interface : \t %d\n", msg->frame.src_iface->interface_id);
 	printf(" SRC IP addr : \t %s\n", IP2Dot(tmpbuf, msg->frame.src_ip_addr));
 	printf(" SRC HW addr : \t %s\n", MAC2Colon(tmpbuf, msg->frame.src_hw_addr));
-	printf(" DST interface : \t %d\n", msg->frame.dst_interface);
+	printf(" DST interface : \t %d\n", msg->frame.dst_iface->interface_id);
 	printf(" NEXT HOP addr : \t %s\n", IP2Dot(tmpbuf, msg->frame.nxth_ip_addr));
 }
 

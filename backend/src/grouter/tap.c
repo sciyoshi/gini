@@ -45,7 +45,7 @@ void *toTapDev(void *arg)
 
 	verbose(2, "[toTapDev]:: entering the function.. ");
 	// find the outgoing interface and device...
-	if ((iface = findInterface(inpkt->frame.dst_interface)) != NULL)
+	if ((iface = inpkt->frame.dst_iface) != NULL)
 	{
 		/* send IP packet or ARP reply */
 		if (inpkt->data.header.prot == htons(ARP_PROTOCOL))
@@ -106,7 +106,7 @@ void* fromTapDev(void *arg)
 		}
 
 		// copy fields into the message from the packet..
-		in_pkt->frame.src_interface = iface->interface_id;
+		in_pkt->frame.src_iface = iface;
 		COPY_MAC(in_pkt->frame.src_hw_addr, iface->mac_addr);
 		COPY_IP(in_pkt->frame.src_ip_addr, iface->ip_addr);
 

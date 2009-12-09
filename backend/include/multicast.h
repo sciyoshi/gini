@@ -4,7 +4,7 @@
 #include <glib.h>
 
 #include "grouter.h"
-#include "ip.h"
+#include "message.h"
 #include "ip.h"
 #include "gnet.h"
 

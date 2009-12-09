@@ -4,6 +4,7 @@
 #include <glib.h>
 
 #include "grouter.h"
+#include "message.h"
 #include "ip.h"
 #include "protocols.h"
 

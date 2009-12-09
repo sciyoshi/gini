@@ -10,21 +10,24 @@
 #define __MESSAGE_H__
 
 #include <sys/types.h>
-#include "grouter.h"
 
+typedef struct _GiniPacket GiniPacket, gpacket_t;
+
+#include "grouter.h"
+#include "ip.h"
+#include "gnet.h"
 
 #define MAX_IPREVLENGTH_ICMP            50       // maximum previous header sent back
-
-
 #define MAX_MESSAGE_SIZE                sizeof(gpacket_t)
 
-
-typedef struct {
+struct _GiniPacket {
 	struct {
-		int src_interface;               // incoming interface number; filled in by gnet?
+		GiniInterface *src_iface;
+		GiniInterface *dst_iface;
+		//int src_interface;               // incoming interface number; filled in by gnet?
 		uchar src_ip_addr[4];            // source IP address; required for ARP, IP, gnet
 		uchar src_hw_addr[6];            // source MAC address; required for ARP, filled by gnet
-		int dst_interface;               // outgoing interface, required by gnet; filled in by IP, ARP
+		//int dst_interface;               // outgoing interface, required by gnet; filled in by IP, ARP
 		uchar nxth_ip_addr[4];           // destination interface IP address; required by ARP, filled IP
 		int arp_valid;
 		int arp_bcast;
@@ -37,10 +40,13 @@ typedef struct {
 			ushort prot;                // protocol field
 		} header;
 
-		uchar data[DEFAULT_MTU];             // payload (limited to maximum MTU)
-	} data;
-} GiniPacket, gpacket_t;
+		union {
+			GiniIpHeader ip;
 
+			uchar data[DEFAULT_MTU];             // payload (limited to maximum MTU)
+		};
+	} data;
+};
 
 gpacket_t *duplicatePacket(gpacket_t *inpkt);
 void printSepLine(char *start, char *end, int count, char sep);

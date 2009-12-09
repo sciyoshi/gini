@@ -15,7 +15,7 @@
  */
 
 #include "grouter.h"
-
+#include "gnet.h"
 #define MAX_ROUTES                      20	// maximum route table size
 
 
