@@ -60,7 +60,7 @@ typedef struct {
 
 typedef struct {
 	gboolean prune_sent;
-	gulong pruned[GINI_IFACE_MAX];
+	gulong   pruned[GINI_IFACE_MAX];
 } GiniDvmrpRouteGroup;
 
 static gboolean gini_dvmrp_edges[GINI_IFACE_MAX];
@@ -164,7 +164,13 @@ gini_dvmrp_forward (GiniPacket *packet)
 
 	// reverse path check
 	if (!gini_dvmrp_reverse_path_check (route, packet)) {
-		// send a LEAF message back to the sender
+		// send a LEAF message back to the sender, we're the dominant router for
+		// this multicast sender (equivalent to sending route with infinity metric)
+		gini_dvmrp_send (
+				GINI_DVMRP_MESSAGE_TYPE_LEAF,
+				*(guint32 *) GINI_MCAST_ALL_ROUTERS,
+				g_ntohl (src_ip),
+				gini_iface_get (packet->frame.src_interface));
 		g_string_append (message, " sending LEAF back (RPF check failed)");
 		goto end;
 	}
@@ -350,6 +356,24 @@ gini_dvmrp_process_graft (GiniPacket *packet)
 	return TRUE;
 }
 
+static gboolean
+gini_dvmrp_process_leaf (GiniPacket *packet)
+{
+	GiniDvmrpRoute *route;
+	GiniInetAddress src_ip;
+
+	src_ip = g_ntohl (packet->igmp->group_address);
+
+	// find the route to the sender in the table
+	if (!(route = gini_dvmrp_route_find (src_ip))) {
+		return FALSE;
+	}
+
+	route->children[packet->frame.src_interface] = FALSE;
+
+	return FALSE;
+}
+
 gboolean
 gini_dvmrp_process (GiniPacket *packet)
 {
@@ -368,7 +392,7 @@ gini_dvmrp_process (GiniPacket *packet)
 		return gini_dvmrp_process_graft (packet);
 
 	case GINI_DVMRP_MESSAGE_TYPE_LEAF:
-		break;
+		return gini_dvmrp_process_leaf (packet);
 
 	default:
 		g_debug ("silently dropping unknown DVMRP message type %d", packet->igmp->subtype);

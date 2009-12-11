@@ -8,7 +8,7 @@ gini_igmp_query (int *count)
 {
 	GiniInterface *iface = NULL;
 
-	g_debug ("sending IGMP query on all interfaces...");
+	//g_debug ("sending IGMP query on all interfaces...");
 
 	while ((iface = gini_iface_next (iface))) {
 		GiniPacket *packet = gini_packet_new ();
