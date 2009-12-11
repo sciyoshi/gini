@@ -137,7 +137,7 @@ gini_iface_get (int index)
 GiniInterface *
 gini_iface_next (GiniInterface *iface)
 {
-	int i = iface ? iface->interface_id : 0;
+	int i = iface ? iface->interface_id + 1 : 0;
 
 	while (i < GINI_IFACE_MAX && !netarray.elem[i]) i++;
 

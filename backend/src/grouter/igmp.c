@@ -17,7 +17,6 @@ gini_igmp_query (int *count)
 
 		igmp->version = GINI_IGMP_VERSION;
 		igmp->type = GINI_IGMP_MESSAGE_TYPE_QUERY;
-		memset (&igmp->group_address, 0, sizeof (igmp->group_address));
 		igmp->checksum = g_htons (gini_checksum ((char *) igmp, sizeof (GiniIgmpHeader) / 2));
 
 		ip->ip_ttl = 1;
