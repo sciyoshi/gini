@@ -108,6 +108,12 @@ out; instead, DVMRP GRAFT messages are sent when the router receives a new
 membership to a multicast group. GRAFT messages cause routers to remove the
 source interface from the pruned interface list of every group record.
 
+dvmrp.c includes a command to show the DVMRP routing information, which can be
+run using "dvmrp show". "dvmrp init" is used to reinitialize the routing table
+to the static routes, and is called on startup by gloader. (This is needed
+since the routing table is also built by gloader after grouter starts, and
+because we don't monitor for changes).
+
 [1] RFC 1075, "Distance Vector Multicast Routing Protocol".
 [1] Internet Draft, "DVMRP Version 3".
 [3] Deering, S., "Multicast Routing in Internetworks and Extended LANs",
