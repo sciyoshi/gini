@@ -1,5 +1,7 @@
 #include <slack/std.h>
 #include <slack/map.h>
+#include <slack/err.h>
+#include <slack/prog.h>
 #include <slack/list.h>
 #include <pthread.h>
 #include "protocols.h"
@@ -101,9 +103,9 @@ void *weightedFairScheduler(void *pc)
 int weightedFairQueuer(pktcore_t *pcore, gpacket_t *in_pkt, int pktsize, char *qkey)
 {
 	simplequeue_t *thisq, *nxtq;
-	double minftime, minstime, tweight;
+	double minstime;
 	List *keylst;
-	char *nxtkey, *savekey;
+	char *nxtkey;
 
 	verbose(2, "[weightedFairQueuer]:: Worst-case weighted fair queuing scheduler processing..");
 

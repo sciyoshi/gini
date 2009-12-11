@@ -11,6 +11,7 @@
 #include "grouter.h"
 #include "vpl.h"
 #include "device.h"
+#include "simplequeue.h"
 #include "message.h"
 #include <pthread.h>
 
@@ -70,12 +71,21 @@ typedef struct _vplinfo_t
 
 
 // function prototype go here...
+
+int GNETInit (pthread_t *ghandler, char *config_dir, char *rname, simplequeue_t *sq);
+void GNETHalt(pthread_t gnethandler);
+void GNETInsertInterface(interface_t *iface);
+int destroyInterfaceByIndex(int indx);
+int upInterface(int index);
+int downInterface(int index);
+void printInterfaces(int mode);
 interface_t *GNETMakeEthInterface(char *vsock_name, char *device,
 			   uchar *mac_addr, uchar *nw_addr, int iface_mtu, int cforce);
 interface_t *GNETMakeTapInterface(char *device, uchar *mac_addr, uchar *nw_addr);
 interface_t *findInterface(int indx);
 void *delayedServerCall(void *arg);
 void *GNETHandler(void *outq);
+int changeInterfaceMTU(int index, int new_mtu);
 
 int             gini_iface_count (void);
 GiniInterface * gini_iface_get   (int index);

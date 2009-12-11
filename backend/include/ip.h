@@ -85,7 +85,7 @@ int IPCheckPacket4Me(gpacket_t *in_pkt);
 int IPProcessBcastPacket(gpacket_t *in_pkt);
 int IPProcessForwardingPacket(gpacket_t *in_pkt);
 int IPCheck4Errors(gpacket_t *in_pkt);
-int IPCheck4Fragmentation(gpacket_t *in_pkt);
+int IPCheck4Fragmentation(gpacket_t *in_pkt, int *mtu);
 int IPCheck4Redirection(gpacket_t *in_pkt);
 int IPProcessMyPacket(gpacket_t *in_pkt);
 int UDPProcess(gpacket_t *in_pkt);

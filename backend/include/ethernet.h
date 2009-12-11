@@ -10,6 +10,6 @@
 /*
  * function prototypes
  */
-
+int findPacketSize(gpacket_t *pkt);
 void *toEthernetDev(void *arg);
 void* fromEthernetDev(void *arg);

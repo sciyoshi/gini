@@ -5,7 +5,7 @@ gini_include = gini_src + '/include'
 
 env = Environment(CPPPATH=gini_include)
 env.ParseConfig('pkg-config --cflags --libs glib-2.0 gthread-2.0')
-env.Append(CFLAGS='-g')
+env.Append(CFLAGS='-g -Wall -Werror')
 env.Append(CFLAGS='-DHAVE_PTHREAD_RWLOCK=1')
 env.Append(CFLAGS='-DHAVE_GETOPT_LONG')
 

@@ -16,20 +16,21 @@
 #include "igmp.h"
 #include "fragment.h"
 #include "packetcore.h"
+#include "icmp.h"
 #include <stdlib.h>
 #include <slack/err.h>
+#include <slack/prog.h>
 #include <netinet/in.h>
 #include <string.h>
 
 route_entry_t route_tbl[MAX_ROUTES];       	// routing table
-mtu_entry_t MTU_tbl[MAX_MTU];		        // MTU table
 
 extern pktcore_t *pcore;
 
 void IPInit()
 {
 	RouteTableInit(route_tbl);
-	MTUTableInit(MTU_tbl);
+	MTUTableInit();
 }
 
 
@@ -92,7 +93,7 @@ int IPCheckPacket4Me(gpacket_t *in_pkt)
 
 	COPY_IP(pkt_ip, gNtohl(tmpbuf, ip_pkt->ip_dst));
 	verbose(2, "[IPCheckPacket4Me]:: looking for IP %s ", IP2Dot(tmpbuf, pkt_ip));
-	if ((count = findAllInterfaceIPs(MTU_tbl, iface_ip)) > 0)
+	if ((count = findAllInterfaceIPs(iface_ip)) > 0)
 	{
 		for (i = 0; i < count; i++)
 		{
@@ -134,7 +135,6 @@ int IPProcessBcastPacket(gpacket_t *in_pkt)
  */
 int IPProcessForwardingPacket(gpacket_t *in_pkt)
 {
-	gpacket_t *pkt_frags[MAX_FRAGMENTS];
 	ip_packet_t *ip_pkt = (ip_packet_t *)in_pkt->data.data;
 	char tmpbuf[MAX_TMPBUF_LEN];
  
@@ -164,13 +164,12 @@ int
 gini_ip_send_fragmented (GiniPacket *packet)
 {
 	gpacket_t *pkt_frags[MAX_FRAGMENTS];
-	ip_packet_t *ip_pkt = packet->ip;
-	int num_frags, i, need_frag;
+	int num_frags, i, need_frag, mtu;
 	char tmpbuf[MAX_TMPBUF_LEN];
 	
 	// check for fragmentation -- this should return three conditions:
 	// FRAGS_NONE, FRAGS_ERROR, MORE_FRAGS
-	need_frag = IPCheck4Fragmentation(packet);
+	need_frag = IPCheck4Fragmentation(packet, &mtu);
 
 	switch (need_frag)
 	{
@@ -189,12 +188,12 @@ gini_ip_send_fragmented (GiniPacket *packet)
 	case FRAGS_ERROR:
 		verbose(2, "[IPProcessForwardingPacket]:: unreachable on packet from %s",
 			IP2Dot(tmpbuf, gNtohl((tmpbuf+20), packet->ip->ip_src)));
-		ICMPProcessFragNeeded(packet->ip);
+		ICMPProcessFragNeeded(packet, mtu);
 		break;
 
 	case MORE_FRAGS:
 		// fragment processing... 
-		num_frags = fragmentIPPacket(packet->ip, pkt_frags);
+		num_frags = fragmentIPPacket(packet, pkt_frags);
 
 		verbose(2, "[IPProcessForwardingPacket]:: IP packet needs fragmentation");
 		// forward each fragment
@@ -251,19 +250,18 @@ int IPCheck4Errors(gpacket_t *in_pkt)
  * MORE_FRAGS - fragmentation is required.
  * GENERAL_ERROR - mtu not found.
  */
-int IPCheck4Fragmentation(gpacket_t *in_pkt)
+int IPCheck4Fragmentation(gpacket_t *in_pkt, int *mtu)
 {
-	int link_mtu;
 	char tmpbuf[MAX_TMPBUF_LEN];
 	ip_packet_t *ip_pkt = (ip_packet_t *)in_pkt->data.data;
 
 	verbose(2, "[IPCheck4Fragmentation]:: .. checking mtu for next hop %s and interface %d ", 
 		IP2Dot(tmpbuf, in_pkt->frame.nxth_ip_addr), in_pkt->frame.dst_interface);
 
-	if ((link_mtu = findMTU(MTU_tbl, in_pkt->frame.dst_interface)) < 0)
+	if ((*mtu = findMTU(in_pkt->frame.dst_interface)) < 0)
 		return GENERAL_ERROR;
 	
-	if (link_mtu < ntohs(ip_pkt->ip_pkt_len))                 // need fragmentation
+	if (*mtu < ntohs(ip_pkt->ip_pkt_len))                 // need fragmentation
 	{
 		if (TEST_DF_BITS(ip_pkt->ip_frag_off))    // DF is set: destination unreachable
 			return FRAGS_ERROR;
@@ -400,7 +398,7 @@ int IPPreparePacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int sr
 
 		verbose(2, "[IPOutgoingPacket]:: lookup MTU of nexthop");
 		// lookup the IP address of the destination interface..
-		if ((status = findInterfaceIP(MTU_tbl, pkt->frame.dst_interface,
+		if ((status = findInterfaceIP(pkt->frame.dst_interface,
 					      iface_ip_addr)) == EXIT_FAILURE)
 					      return EXIT_FAILURE; 
 		// the outgoing packet should have the interface IP as source

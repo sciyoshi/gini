@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <glib/gstdio.h>
 
 #include "udp.h"
 
@@ -81,8 +82,6 @@ gini_udp_send (GiniSocketAddress *dst,
                gchar             *data,
                gsize              length)
 {
-	guint32 checksum;
-
 	GiniPacket *packet = g_new0 (GiniPacket, 1);
 	GiniIpHeader *ip = packet->ip = (GiniIpHeader *) (packet->data.data);
 	GiniUdpHeader *udp = packet->udp = (GiniUdpHeader *) (ip + 1);
@@ -123,7 +122,6 @@ gini_udp_recv (GiniSocketAddress *dst,
 	GiniPacket *packet;
 	GiniIpHeader *ip;
 	GiniUdpHeader *udp;
-	guint16 size;
 
 	// set the port we are listening on
 	g_static_mutex_lock (&gini_udp_mutex);
@@ -152,7 +150,6 @@ gini_udp_recv (GiniSocketAddress *dst,
 void
 gini_udp_process (GiniPacket *packet)
 {
-	GiniIpHeader *ip = packet->ip;
 	GiniUdpHeader *udp = packet->udp;
 
 	gushort port;

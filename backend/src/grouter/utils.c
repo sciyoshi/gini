@@ -23,7 +23,6 @@ int compareIPUsingMask(uchar *ip_addr, uchar *network, uchar *netmask)
 {
 	uchar bnet[4];
 	int i;
-	char tmpbuf[64];
 
 	COPY_IP(bnet, ip_addr);
 	for (i = 0; i < 4; i++)
@@ -103,29 +102,6 @@ int gAtoi(char *str)
 
 
 
-unsigned char *gHtonl(unsigned char tbuf[], unsigned char val[])
-{
-	long inpara, outpara;
-
-	memcpy(&inpara, val, 4);
-	outpara = htonl(inpara);
-	memcpy(tbuf, &outpara, 4);
-
-	return tbuf;
-}
-
-
-unsigned char *gNtohl(unsigned char tbuf[], unsigned char val[])
-{
-	long inpara, outpara;
-
-	memcpy(&inpara, val, 4);
-	outpara = ntohl(inpara);
-	memcpy(tbuf, &outpara, 4);
-
-	return tbuf;
-}
-
 
 /*
  * Redefine signal handlers
@@ -151,15 +127,16 @@ void redefineSignalHandler(int sigid, void (*my_func)(int signum))
  * compute the checksum of a buffer, by adding 2-byte words
  * and returning their one's complement
  */
-ushort checksum(uchar *buf, int iwords)
+ushort checksum(void *buf, int iwords)
 {
+	uchar *buffer = buf;
 	unsigned long cksum = 0;
 	int i;
 
 	for(i = 0; i < iwords; i++)
 	{
-		cksum += buf[0] << 8;
-		cksum += buf[1];
+		cksum += buffer[0] << 8;
+		cksum += buffer[1];
 		buf += 2;
 	}
 

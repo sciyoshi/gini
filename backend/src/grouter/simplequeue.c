@@ -10,6 +10,7 @@
 #include <slack/std.h>
 #include <slack/map.h>
 #include <slack/list.h>
+#include <slack/err.h>
 #include <math.h>
 #include <time.h>
 #include <sys/time.h>

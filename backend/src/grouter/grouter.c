@@ -16,6 +16,11 @@
 #include "classifier.h"
 #include "udp.h"
 #include "filter.h"
+#include "multicast.h"
+#include "arp.h"
+#include "gnet.h"
+#include "info.h"
+#include "cli.h"
 #include <pthread.h>
 
 router_config rconfig = {.router_name=NULL, .gini_home=NULL, .cli_flag=0, .config_file=NULL, .config_dir=NULL, .ghandler=0, .clihandler= 0, .scheduler=0, .worker=0, .schedcycle=10000, .schedpolicy="rr"};
@@ -80,7 +85,7 @@ grtr_init (void)
 int main(int ac, char *av[])
 {
 	char rpath[MAX_NAME_LEN];
-	int status, *jstatus;
+	int status;
 	simplequeue_t *outputQ, *workQ, *qtoa;
 
 	// setup the program properties
@@ -127,6 +132,8 @@ int main(int ac, char *av[])
 	wait4thread(rconfig.scheduler);
 	wait4thread(rconfig.worker);
 	wait4thread(rconfig.ghandler);
+
+	return 0;
 }
 
 

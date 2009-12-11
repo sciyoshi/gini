@@ -45,7 +45,8 @@ void setTimeMode(int rawmode);
 int getTimeMode();
 void infoList();
 void infoInit(char *rpath, char *rname);
-
+void setUpdateInterval(int interval);
+int getUpdateInterval();
 #endif
 
 

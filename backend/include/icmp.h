@@ -98,4 +98,9 @@ typedef struct _pingstat_t
 void ICMPSendPingPacket(uchar *dst_ip, int size, int seq);
 void ICMPProcessEchoRequest(gpacket_t *in_pkt);
 void ICMPProcessEchoReply(gpacket_t *in_pkt);
+void ICMPDoPing(uchar *ipaddr, int pkt_size, int retries);
+void ICMPProcessPacket(gpacket_t *in_pkt);
+void ICMPProcessTTLExpired(gpacket_t *in_pkt);
+void ICMPProcessRedirect(gpacket_t *in_pkt, uchar *gw_addr);
+void ICMPProcessFragNeeded(gpacket_t *in_pkt, int interface_mtu);
 #endif

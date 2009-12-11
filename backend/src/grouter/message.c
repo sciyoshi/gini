@@ -8,6 +8,7 @@
 #include "protocols.h"
 #include "ip.h"
 #include "arp.h"
+#include <slack/err.h>
 
 GiniPacket *
 gini_packet_new (void)

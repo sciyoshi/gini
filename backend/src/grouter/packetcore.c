@@ -16,13 +16,16 @@
 #define _XOPEN_SOURCE             500
 #include <unistd.h>
 #include <slack/std.h>
+#include <slack/err.h>
 #include <slack/map.h>
 #include <slack/list.h>
 #include <pthread.h>
+#include <arpa/inet.h>
 #include "protocols.h"
 #include "packetcore.h"
 #include "message.h"
 #include "classifier.h"
+#include "arp.h"
 #include "grouter.h"
 
 extern classlist_t *classifier;
@@ -152,7 +155,7 @@ void printAllQueues(pktcore_t *pcore)
 	keylst = map_keys(pcore->queues);
 	klster = lister_create(keylst);
 
-	while (nxtkey = ((char *)lister_next(klster)))
+	while ((nxtkey = ((char *)lister_next(klster))))
 	{
 		nextq = map_get(pcore->queues, nxtkey);
 		printSimpleQueue(nextq);
@@ -173,7 +176,7 @@ void printQueueStats(pktcore_t *pcore)
 	klster = lister_create(keylst);
 
 	printf("NOT YET IMPLEMENTED \n");
-	while (nxtkey = ((char *)lister_next(klster)))
+	while ((nxtkey = ((char *)lister_next(klster))))
 	{
 		nextq = map_get(pcore->queues, nxtkey);
 		printf("Stats for %s \n", nxtkey);
@@ -194,7 +197,7 @@ void printOneQueue(pktcore_t *pcore, char *qname)
 	keylst = map_keys(pcore->queues);
 	klster = lister_create(keylst);
 
-	while (nxtkey = ((char *)lister_next(klster)))
+	while ((nxtkey = ((char *)lister_next(klster))))
 	{
 		if (!strcmp(qname, nxtkey))
 		{
@@ -217,7 +220,7 @@ void modifyQueueWeight(pktcore_t *pcore, char *qname, double weight)
 	keylst = map_keys(pcore->queues);
 	klster = lister_create(keylst);
 
-	while (nxtkey = ((char *)lister_next(klster)))
+	while ((nxtkey = ((char *)lister_next(klster))))
 	{
 		if (!strcmp(qname, nxtkey))
 		{
@@ -240,7 +243,7 @@ void modifyQueueDiscipline(pktcore_t *pcore, char *qname, char *qdisc)
 	keylst = map_keys(pcore->queues);
 	klster = lister_create(keylst);
 
-	while (nxtkey = ((char *)lister_next(klster)))
+	while ((nxtkey = ((char *)lister_next(klster))))
 	{
 		if (!strcmp(qname, nxtkey))
 		{
@@ -264,7 +267,7 @@ int delPktCoreQueue(pktcore_t *pcore, char *qname)
 	klster = lister_create(keylst);
 	deleted = 0;
 
-	while (nxtkey = ((char *)lister_next(klster)))
+	while ((nxtkey = ((char *)lister_next(klster))))
 	{
 		if (!strcmp(qname, nxtkey))
 		{

@@ -70,7 +70,7 @@ typedef struct _arp_packet_t
 
 int ARPResolve(gpacket_t *in_pkt);
 void ARPProcess(gpacket_t *pkt);
-
+void ARPInit(void);
 void ARPInitTable();
 int ARPFindEntry(uchar *ip_addr, uchar *mac_addr);
 void ARPAddEntry(uchar *ip_addr, uchar *mac_addr);
@@ -82,6 +82,6 @@ void ARPSendRequest(gpacket_t *pkt);
 void ARPInitBuffer();
 void ARPAddBuffer(gpacket_t *in_pkt);
 int ARPGetBuffer(gpacket_t **out_pkt, uchar *nexthop);
-void ARPFlushBuffer(char *next_hop, char *mac_addr);
+void ARPFlushBuffer(uchar *next_hop, uchar *mac_addr);
 
 #endif

@@ -49,6 +49,7 @@ typedef struct _cli_entry_t
 void dummyFunction();
 void parseACLICmd(char *str);
 void CLIProcessCmds(FILE *fp, int online);
+int CLIInit(router_config *rarg);
 void CLIPrintHelpPreamble();
 void *CLIProcessCmdsInteractive(void *arg);
 void registerCLI(char *key, void (*handler)(),

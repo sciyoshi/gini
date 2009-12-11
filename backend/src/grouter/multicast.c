@@ -1,5 +1,8 @@
+#include <glib/gstdio.h>
+
 #include "multicast.h"
 #include "igmp.h"
+#include "dvmrp.h"
 #include "cli.h"
 
 static GTree *gini_mcast_memberships[MAX_INTERFACES];
@@ -31,7 +34,7 @@ gini_mcast_membership_add (GiniInterface   *interface,
 
 	g_debug ("adding membership on interface %s to multicast group %s",
 		gini_ntoa (tmp1, interface->ip_addr),
-		gini_ntoa (tmp2, (char *) &group_address));
+		gini_ntoa (tmp2, (uchar *) &group_address));
 
 	g_tree_replace (*memberships, GINT_TO_POINTER (group_address), GINT_TO_POINTER (time.tv_sec));
 }
@@ -85,7 +88,7 @@ gini_mcast_clean_expired (gpointer data)
 			if (iface) {
 				g_debug ("removing membership on interface %s to multicast group %s",
 					gini_ntoa (tmp1, iface->ip_addr),
-					gini_ntoa (tmp2, (char *) &(info.expired->data)));
+					gini_ntoa (tmp2, (uchar *) &(info.expired->data)));
 
 				gini_mcast_membership_remove (iface, GPOINTER_TO_INT (info.expired->data));
 			}
@@ -104,8 +107,8 @@ gini_mcast_clean_expired (gpointer data)
 
 
 void
-gini_mcast_ip_to_mac (char mac[6],
-                      char ip[4])
+gini_mcast_ip_to_mac (uchar       mac[6],
+                      const uchar ip[4])
 {
 	memcpy (mac, ip, sizeof (GiniInetAddress));
 
@@ -118,10 +121,8 @@ gini_mcast_ip_to_mac (char mac[6],
 gboolean
 gini_mcast_process (GiniPacket *packet)
 {
-	char tmp[64];
-
 	if (packet->ip->ip_prot == GINI_IGMP_PROTOCOL) {
-		return gini_dvmrp_process (packet);
+		return gini_igmp_process (packet);
 	} else {
 		int i;
 
@@ -156,10 +157,6 @@ gini_mcast_process (GiniPacket *packet)
  * CLI functions
  */
 
-static GOptionEntry gini_mcast_cli_entries[] = {
-	{ NULL }
-};
-
 typedef struct {
 	GiniInterface *iface;
 	GTimeVal       now;
@@ -172,10 +169,10 @@ print_membership (GiniInetAddress  group_address,
 {
 	gchar tmp1[64], tmp2[64];
 
-	g_printf ("%-9s | %-17s | %-17s | %ds ago\n",
+	g_printf ("%-9s | %-17s | %-17s | %lds ago\n",
 		info->iface->device_name,
 		gini_ntoa (tmp1, info->iface->ip_addr),
-		gini_ntoa (tmp2, (char *) &group_address),
+		gini_ntoa (tmp2, (uchar *) &group_address),
 		info->now.tv_sec - last_time);
 }
 
@@ -184,7 +181,6 @@ gini_mcast_cli (int argc, char *argv[])
 {
 	MembershipInfo info;
 	int i;
-	char tmp[64];
 
 	g_get_current_time (&info.now);
 

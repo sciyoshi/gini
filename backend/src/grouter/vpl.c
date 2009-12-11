@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <slack/std.h>
+#include <slack/err.h>
 #include <slack/fio.h>
 #include <sys/stat.h>
 #include "gpcap.h"
@@ -277,7 +278,7 @@ int vpl_accept_connect(vpl_data_t *v)
 	int insock, rbytes;
 	struct sockaddr addr;
 	struct request_v3 req;
-	int len;
+	unsigned int len;
 
 	len = sizeof(struct sockaddr);
 	if ((v == NULL) || (v->control < 0))

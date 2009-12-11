@@ -23,6 +23,7 @@
 #include <limits.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include <glib.h>
 
 /*
  * global definitions.... this is stuff that could not be
@@ -133,11 +134,18 @@ void printTimeVal(struct timeval *v);
 char *getCurrentTimeVal();
 int gAtoi(char *str);
 
-unsigned char *gHtonl(uchar tval[], uchar val[]);
-unsigned char *gNtohl(uchar tval[], uchar val[]);
-ushort checksum(uchar *buf, int iwords);
+#define gHtonl(tval, val) (*(gulong *) (tval) = g_htonl (*(gulong *) (val)), (guchar *) tval)
+
+#define gNtohl(tval, val) (*(gulong *) (tval) = g_ntohl (*(gulong *) (val)), (guchar *) tval)
+
+//unsigned char *gHtonl(void *tval, uchar val[]);
+//unsigned char *gNtohl(void *tval, uchar val[]);
+ushort checksum(void *buf, int iwords);
 
 
+void consoleRestart(char *rpath, char *rname);
+void consoleGetState();
+void consoleInit(char *rpath, char *rname);
 // function prototypes for code in router.c
 void redefineSignalHandler(int sigid, void (*my_func)());
 void wait4thread(pthread_t threadid);

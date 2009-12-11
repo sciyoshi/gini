@@ -15,6 +15,7 @@
 #include <slack/err.h>
 #include <netinet/in.h>
 #include <sys/time.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 

@@ -47,7 +47,7 @@ void moveRule(filtertab_t *ft, int rulenum, char *dir);
 
 void delFilterRule(filtertab_t *ft, int rulenum);
 int addFilterRule(filtertab_t *ft, int type, char *cname);
-
+void flushFilter(filtertab_t *ft);
 int filteredPacket(filtertab_t *ft, gpacket_t *in_pkt);
 
 #endif

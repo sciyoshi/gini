@@ -1,5 +1,7 @@
 #include <slack/std.h>
 #include <slack/map.h>
+#include <slack/prog.h>
+#include <slack/err.h>
 #include <slack/list.h>
 #include <pthread.h>
 #include "protocols.h"
@@ -69,10 +71,7 @@ void *roundRobinScheduler(void *pc)
 
 int roundRobinQueuer(pktcore_t *pcore, gpacket_t *in_pkt, int pktsize, char *qkey)
 {
-	simplequeue_t *thisq, *nxtq;
-	double minftime, minstime, tweight;
-	List *keylst;
-	char *nxtkey, *savekey;
+	simplequeue_t *thisq;
 
 	verbose(2, "[roundRobinQueuer]:: Round robin queuing scheme.. a very simple queuer invoked..");
 	if (prog_verbosity_level() >= 3)

@@ -34,4 +34,9 @@ typedef struct _route_entry_t
 // prototypes of the functions provided for the route table handling..
 
 void RouteTableInit(route_entry_t route_tbl[]);
+void addRouteEntry(route_entry_t route_tbl[], uchar* nwork, uchar* nmask, uchar* nhop, int interface);
+void deleteRouteEntryByIndex(route_entry_t route_tbl[], int i);
+void printRouteTable(route_entry_t route_tbl[]);
+void deleteRouteEntryByInterface(route_entry_t route_tbl[], int interface);
+int findRouteEntry(route_entry_t route_tbl[], uchar *ip_addr, uchar *nhop, int *ixface);
 #endif

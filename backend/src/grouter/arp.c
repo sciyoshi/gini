@@ -8,6 +8,7 @@
  */
 
 #include <slack/err.h>
+#include <slack/prog.h>
 #include <netinet/in.h>
 #include "protocols.h"
 #include "arp.h"
@@ -28,9 +29,6 @@ extern pktcore_t *pcore;
 
 void ARPInit()
 {
-	gpacket_t in_pkt;
-	char tmpbuf[MAX_NAME_LEN];
-
 	verbose(2, "[initARP]:: Initializing the ARP table and buffer ");
 
 	ARPInitTable();                    // initialize APR table
@@ -452,7 +450,7 @@ int ARPGetBuffer(gpacket_t **out_pkt, uchar *nexthop)
  * flush all packets from buffer matching the nexthop
  * for which we now have an ARP entry
  */
-void ARPFlushBuffer(char *next_hop, char *mac_addr)
+void ARPFlushBuffer(uchar *next_hop, uchar *mac_addr)
 {
 	gpacket_t *bfrd_msg;
 	char tmpbuf[MAX_TMPBUF_LEN];

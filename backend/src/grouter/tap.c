@@ -16,6 +16,8 @@
 #include "arp.h"
 #include "ip.h"
 #include "ethernet.h"
+#include "tap.h"
+#include "tapio.h"
 #include <netinet/in.h>
 #include <stdlib.h>
 
@@ -40,7 +42,7 @@ void *toTapDev(void *arg)
 	gpacket_t *inpkt = (gpacket_t *)arg;
 	interface_t *iface;
 	arp_packet_t *apkt;
-	char tmpbuf[MAX_TMPBUF_LEN];
+	uchar tmpbuf[MAX_TMPBUF_LEN];
 	int pkt_size;
 
 	verbose(2, "[toTapDev]:: entering the function.. ");
@@ -54,7 +56,7 @@ void *toTapDev(void *arg)
 			COPY_MAC(apkt->src_hw_addr, iface->mac_addr);
 			COPY_IP(apkt->src_ip_addr, gHtonl(tmpbuf, iface->ip_addr));
 		}
-		pkt_size = findPacketSize(&(inpkt->data));
+		pkt_size = findPacketSize(inpkt);
 
 		verbose(2, "[toTapDev]:: tap_sendto called for interface %d.. ", iface->interface_id);
 		tap_sendto(iface->vpl_data, &(inpkt->data), pkt_size);
@@ -73,7 +75,6 @@ void *toTapDev(void *arg)
 void* fromTapDev(void *arg)
 {
 	interface_t *iface = (interface_t *) arg;
-	interface_array_t *iarr = (interface_array_t *)iface->iarray;
 	uchar bcast_mac[] = MAC_BCAST_ADDR;
 	char *pkttag;
 	gpacket_t *in_pkt;

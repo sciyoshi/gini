@@ -60,6 +60,7 @@ pthread_t PktCoreSchedulerInit(pktcore_t *pcore);
 int PktCoreWorkerInit(pktcore_t *pcore);
 void *packetProcessor(void *pc);
 
+char *tagPacket(pktcore_t *pcore, gpacket_t *in_pkt);
 
 // Function prototypes from roundrobin.c and wfq.c??
 void *weightedFairScheduler(void *pc);

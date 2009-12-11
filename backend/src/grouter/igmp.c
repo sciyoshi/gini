@@ -32,7 +32,7 @@ gini_igmp_query (int *count)
 			ip->ip_cksum = 0;
 			ip->ip_cksum = g_htons (gini_checksum ((char *) ip, ip->ip_hdr_len * 2));
 
-			gini_mcast_ip_to_mac (packet->data.header.dst, GINI_MCAST_ALL_HOSTS);
+			gini_mcast_ip_to_mac (packet->data.header.dst, (guchar *) GINI_MCAST_ALL_HOSTS);
 
 			packet->frame.dst_interface = i;
 			packet->frame.arp_bcast = TRUE;
@@ -72,7 +72,6 @@ gini_igmp_init (void)
 gboolean
 gini_igmp_process (GiniPacket *packet)
 {
-	gchar tmp[64];
 	GiniIpHeader *ip = packet->ip;
 	GiniIgmpHeader *igmp = packet->igmp;
 

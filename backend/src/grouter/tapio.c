@@ -18,6 +18,7 @@
 
 #include <slack/std.h>
 #include <slack/fio.h>
+#include <slack/err.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -42,7 +43,7 @@
 vpl_data_t *tap_connect(char *sock_name)
 {
 	struct ifreq ifr;
-	int n, fd;
+	int fd;
 
 	verbose(2, "[vpl_connect]:: starting connection.. ");
 	vpl_data_t *pri = (vpl_data_t *)malloc(sizeof(vpl_data_t));

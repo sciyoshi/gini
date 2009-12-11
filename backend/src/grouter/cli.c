@@ -26,7 +26,10 @@
 #include "filter.h"
 #include "classspec.h"
 #include "packetcore.h"
+#include "icmp.h"
+#include "info.h"
 #include "udp.h"
+#include "arp.h"
 #include <slack/err.h>
 #include <slack/std.h>
 #include <slack/prog.h>
@@ -34,6 +37,7 @@
 #include <stdlib.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+
 
 
 Map *cli_map;
@@ -44,7 +48,6 @@ extern FILE *rl_instream;
 extern router_config rconfig;
 
 extern route_entry_t route_tbl[MAX_ROUTES];
-extern mtu_entry_t MTU_tbl[MAX_MTU];
 extern classlist_t *classifier;
 extern filtertab_t *filter;
 extern pktcore_t *pcore;
@@ -213,6 +216,7 @@ int CLIInit(router_config *rarg)
 	pthread_join(rarg->clihandler, (void **)&jstat);
 	verbose(2, "[cliHandler]:: Destroying the CLI datastructures ");
 	CLIDestroy();
+	return 0;
 }
 
 
@@ -229,6 +233,7 @@ void *CLIProcessCmdsInteractive(void *arg)
 
 	CLIPrintHelpPreamble();
 	CLIProcessCmds(fp, 1);
+	return NULL;
 }
 
 
@@ -473,6 +478,7 @@ int getDevType(char *str)
 		return ETH_DEV;
 	if (strstr(str, "tap") != NULL)
 		return TAP_DEV;
+	return 0;
 }
 
 
@@ -552,7 +558,7 @@ void ifconfigCmd()
 		{
 			verbose(2, "[configureInterfaces]:: Inserting the definition in the interface table ");
 			GNETInsertInterface(iface);
-			addMTUEntry(MTU_tbl, iface->interface_id, iface->device_mtu, iface->ip_addr);
+			addMTUEntry(iface->interface_id, iface->device_mtu, iface->ip_addr);
 			// for tap0 interface the MTU value cannot be changed. should we allow change?
 		}
 	}
@@ -589,7 +595,7 @@ void ifconfigCmd()
 			if (!strcmp("-gateway", next_tok))
 			{
 				next_tok = strtok(NULL, " \n");
-				strcpy(gw_addr, next_tok);
+				strcpy((char *) gw_addr, next_tok);
 			} else if (!strcmp("-mtu", next_tok))
 			{
 				next_tok = strtok(NULL, " \n");
@@ -681,7 +687,7 @@ void routeCmd()
 void arpCmd()
 {
 	char *next_tok;
-	uchar mac_addr[6], ip_addr[4];
+	uchar ip_addr[4];
 
 	next_tok = strtok(NULL, " \n");
 
@@ -698,7 +704,7 @@ void arpCmd()
 			if (!strcmp("-ip", next_tok))
 			{
 				next_tok = strtok(NULL, " \n");
-				strcpy(ip_addr, next_tok);
+				strcpy((char *) ip_addr, next_tok);
 			}
 		}
 		ARPPrintTable();
@@ -709,10 +715,10 @@ void arpCmd()
 			if (!strcmp("-ip", next_tok))
 			{
 				next_tok = strtok(NULL, " \n");
-				strcpy(ip_addr, next_tok);
+				strcpy((char *) ip_addr, next_tok);
 			}
 		}
-		ARPDeleteEntry(ip_addr);
+		ARPDeleteEntry((char *) ip_addr);
 	}
 }
 
@@ -772,7 +778,6 @@ port_range_t *parsePortRangeSpec(char *instr)
 void classCmd()
 {
 	char *next_tok;
-	char tmpbuf[MAX_TMPBUF_LEN];
 	char cname[MAX_DNAME_LEN];
 	int sside;
 	ip_spec_t *ips;
@@ -850,8 +855,6 @@ void classCmd()
 void filterCmd()
 {
 	char *next_tok;
-	char tmpbuf[MAX_TMPBUF_LEN];
-	char cname[MAX_DNAME_LEN];
 	int type, rulenum;
 
 
@@ -1122,7 +1125,6 @@ void helpCmd()
 void getCmd()
 {
 	char *next_tok = strtok(NULL, " \n");
-	int level, cyclelen, rawmode, updateinterval;
 
 	if (next_tok == NULL)
 		error("[getCmd]:: ERROR!! missing get-parameter");
@@ -1243,3 +1245,4 @@ void spolicyCmd()
 
 
 }
+

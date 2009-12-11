@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <slack/std.h>
+#include <slack/err.h>
 #include <slack/fio.h>
 #include <sys/stat.h>
 
@@ -22,10 +23,11 @@ simplequeue_t *consoleq;
 char consolepath[MAX_NAME_LEN];
 pthread_t console_threadid;
 
+int write_pcapheader(int fid);
 
 void consoleRestart(char *rpath, char *rname)
 {
-	int fd, status;
+	int fd;
 
 	sprintf(consolepath, "%s/%s.%s", rpath, rname, "port");
 
@@ -57,7 +59,7 @@ int write_pcapheader(int fid)
 	pcap_hdr_t phdr = {0xa1b2c3d4, 2, 4, 0, 0, 65535, 1};
 	int bytes;
 
- 	if (bytes = write(fid, &phdr, sizeof(pcap_hdr_t)) == -1)
+ 	if ((bytes = write(fid, &phdr, sizeof(pcap_hdr_t))) == -1)
  	{
 		error("[write_pcapheader]:: error writing the pcap header ");
  		return -1; 
@@ -77,7 +79,7 @@ int write_pcappacket(int fid, void *buf, int len)
 	bcopy(&pchdr, lbuf, sizeof(pcaprec_hdr_t));
 	bcopy(buf, (lbuf + sizeof(pcaprec_hdr_t)), len);
 
-	if (bytes = write(fid, lbuf, len + sizeof(pcaprec_hdr_t)) == -1)
+	if ((bytes = write(fid, lbuf, len + sizeof(pcaprec_hdr_t))) == -1)
 	{
 		error("[write_pcapheader]:: error writing the pcap header ");
  		return -1; 

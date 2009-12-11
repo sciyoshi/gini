@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <slack/std.h>
 #include <slack/fio.h>
+#include <slack/err.h>
 #include <sys/stat.h>
 
 /*
@@ -189,9 +190,9 @@ void infoList()
 	{
 		qptr = (queue_target_t *)lister_next(lster);
 		if (qptr->active)
-			printf("%s\tEnabled\t%x\n", qptr->targetname, (unsigned int)qptr->queue);
+			printf("%s\tEnabled\t%" G_GSIZE_FORMAT "\n", qptr->targetname, (gsize) qptr->queue);
 		else
-			printf("%s\tDisabled\t%x\n", qptr->targetname, (unsigned int)qptr->queue);
+			printf("%s\tDisabled\t%" G_GSIZE_FORMAT "\n", qptr->targetname, (gsize) qptr->queue);
 	}
 	printf("\n");
 	lister_release(lster);

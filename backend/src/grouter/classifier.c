@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <slack/list.h>
+#include <slack/err.h>
 #include "classspec.h"
 #include "classifier.h"
 #include "ip.h"
@@ -156,7 +157,7 @@ void printClassifier(classlist_t *cl)
 
 	printf("\nRule ID\tRule Tag\tSrc IP\t<Src Port Range>\tDst IP\t<Dst Port Range>\tProtocol\tTOS\n");
 	lstr = lister_create(cl->deftab);
-	while (ptr = ((classdef_t*)lister_next(lstr)))
+	while ((ptr = ((classdef_t*)lister_next(lstr))))
 		printClassDef(ptr);
 
 	lister_release(lstr);
@@ -170,7 +171,7 @@ int insertIPSpec(classlist_t *clas, char *cname, int srcside, ip_spec_t *ipspec)
 	classdef_t *ptr;
 
 	lstr = lister_create(clas->deftab);
-	while (ptr = ((classdef_t *)lister_next(lstr)))
+	while ((ptr = ((classdef_t *)lister_next(lstr))))
 	{
 		if (!strcmp(ptr->cname, cname))
 		{
@@ -191,7 +192,7 @@ int insertPortRangeSpec(classlist_t *clas, char *cname, int srcside, port_range_
 	classdef_t *ptr;
 
 	lstr = lister_create(clas->deftab);
-	while (ptr = ((classdef_t *)lister_next(lstr)))
+	while ((ptr = ((classdef_t *)lister_next(lstr))))
 	{
 		if (!strcmp(ptr->cname, cname))
 		{
@@ -212,7 +213,7 @@ int insertProtSpec(classlist_t *clas, char *cname, int prot)
 	classdef_t *ptr;
 
 	lstr = lister_create(clas->deftab);
-	while (ptr = ((classdef_t *)lister_next(lstr)))
+	while ((ptr = ((classdef_t *)lister_next(lstr))))
 	{
 		if (!strcmp(ptr->cname, cname))
 		{
@@ -230,7 +231,7 @@ int insertTOSSpec(classlist_t *clas, char *cname, int tos)
 	classdef_t *ptr;
 
 	lstr = lister_create(clas->deftab);
-	while (ptr = ((classdef_t *)lister_next(lstr)))
+	while ((ptr = ((classdef_t *)lister_next(lstr))))
 	{
 		if (!strcmp(ptr->cname, cname))
 		{
@@ -248,7 +249,7 @@ int compareIP2Spec(uchar ip[], ip_spec_t *ips)
 {
 	int preflen;
 	uchar spec[4];
-	char tmpbuf[MAX_TMPBUF_LEN];
+	uchar tmpbuf[MAX_TMPBUF_LEN];
 	uchar temp[4] = {0,0,0,0}, mask, tbyte = 0;
 	int prefbytes;
 	int i, j, rembits;

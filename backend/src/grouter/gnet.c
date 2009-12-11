@@ -118,18 +118,6 @@ gini_iface_count (void)
 	return netarray.count;
 }
 
-/*
- * shutdown all interfaces.. used at router shutdown..
- */
-void haltInterfaces()
-{
-	int i;
-
-	for (i = 0; i < MAX_INTERFACES; i++)
-		destroyInterface(netarray.elem[i]);
-}
-
-
 
 int getNextInterfaceID(void)
 {
@@ -183,6 +171,68 @@ int deleteInterface(int indx)
 	if (netarray.count > 0) netarray.count--;
 
 	return EXIT_SUCCESS;
+}
+
+
+
+
+/*
+ * destroyInterface(): remove the specified interface from the router.
+ * The router should remove associated route table information, ARP entries,
+ * and stop the threads (only fromXDevice thread).
+ */
+int destroyInterface(interface_t *iface)
+{
+
+	// nothing to do if iface is NULL
+	if (iface == NULL)
+		return EXIT_FAILURE;
+
+	verbose(2, "[destroyInterface]:: entering the function..");
+	// remove the routing table entries...
+	deleteRouteEntryByInterface(route_tbl, iface->interface_id);
+
+	// remove the ARP table entries
+	ARPDeleteEntry((char *) iface->ip_addr);
+
+	verbose(2, "[destroyInterface]:: cancelling the fromdev handler.. ");
+	if (iface->state == INTERFACE_UP)
+	{
+		pthread_cancel(iface->threadid);        // cancel the running thread
+		// close socket
+		close(iface->iface_fd);
+	}
+
+	verbose(2, "[destroyInterface]:: cancelling the shadow thread.. ");
+	if (iface->mode == IFACE_SERVER_MODE)
+	{
+		pthread_cancel(iface->sdwthread);      // cancel the shadow thread
+		unlink(iface->sock_name);
+	}
+
+	// remove interface from table...
+	deleteInterface(iface->interface_id);
+
+	return EXIT_SUCCESS;
+}
+
+/*
+ * destroyInterface by Index...
+ */
+int destroyInterfaceByIndex(int indx)
+{
+	return destroyInterface(findInterface(indx));
+}
+
+/*
+ * shutdown all interfaces.. used at router shutdown..
+ */
+void haltInterfaces()
+{
+	int i;
+
+	for (i = 0; i < MAX_INTERFACES; i++)
+		destroyInterface(netarray.elem[i]);
 }
 
 
@@ -279,6 +329,79 @@ void printInterfaces(int mode)
 
 
 /*
+ * change the interface state to up -- of this interface
+ */
+int upThisInterface(interface_t *iface)
+{
+	int thread_stat;
+
+	iface->state = INTERFACE_UP;
+	thread_stat = pthread_create(&(iface->threadid), NULL,
+				     (void *)iface->devdriver->fromdev, (void *)iface);
+	if (thread_stat != 0)
+		return EXIT_FAILURE;
+
+	return EXIT_SUCCESS;
+}
+
+
+
+/*
+ * change the interface state to down -- of this interface
+ */
+int downThisInterface(interface_t *iface)
+{
+	int status;
+
+	status = pthread_cancel(iface->threadid);
+	iface->state = INTERFACE_DOWN;
+
+	if (status == 0)
+		return EXIT_SUCCESS;
+	else
+		return EXIT_FAILURE;
+}
+
+
+
+
+/*
+ * change the interface state to up
+ */
+int upInterface(int index)
+{
+	interface_t *iface;
+
+	iface = findInterface(index);
+	if (iface == NULL)
+	{
+		error("[upInterface]:: Interface %d not found.. unable to bring up ", index);
+		return EXIT_FAILURE;
+	}
+
+	return upThisInterface(iface);
+}
+
+
+/*
+ * change the interface state to down
+ */
+int downInterface(int index)
+{
+	interface_t *iface;
+
+	iface = findInterface(index);
+	if (iface == NULL)
+	{
+		error("[downInterface]:: Interface %d not found ..unable to take down ", index);
+		return EXIT_FAILURE;
+	}
+
+	return downThisInterface(iface);
+}
+
+
+/*
  * Create an interface data structure and fill it with relevant information.
  * This routine does not setup any external elements.. other than finding
  * the device driver and linking it. We need the correct device driver for
@@ -346,7 +469,6 @@ interface_t *GNETMakeEthInterface(char *vsock_name, char *device,
 	int iface_id, thread_stat;
 	char tmpbuf[MAX_TMPBUF_LEN];
 	vplinfo_t *vi;
-	pthread_t threadid;
 
 
 	verbose(2, "[GNETMakeEthInterface]:: making Interface for [%s] with MAC %s and IP %s",
@@ -490,56 +612,6 @@ void *delayedServerCall(void *arg)
 }
 
 
-/*
- * destroyInterface by Index...
- */
-int destroyInterfaceByIndex(int indx)
-{
-	return destroyInterface(findInterface(indx));
-}
-
-
-/*
- * destroyInterface(): remove the specified interface from the router.
- * The router should remove associated route table information, ARP entries,
- * and stop the threads (only fromXDevice thread).
- */
-int destroyInterface(interface_t *iface)
-{
-
-	// nothing to do if iface is NULL
-	if (iface == NULL)
-		return EXIT_FAILURE;
-
-	verbose(2, "[destroyInterface]:: entering the function..");
-	// remove the routing table entries...
-	deleteRouteEntryByInterface(route_tbl, iface->interface_id);
-
-	// remove the ARP table entries
-	ARPDeleteEntry(iface->ip_addr);
-
-	verbose(2, "[destroyInterface]:: cancelling the fromdev handler.. ");
-	if (iface->state == INTERFACE_UP)
-	{
-		pthread_cancel(iface->threadid);        // cancel the running thread
-		// close socket
-		close(iface->iface_fd);
-	}
-
-	verbose(2, "[destroyInterface]:: cancelling the shadow thread.. ");
-	if (iface->mode == IFACE_SERVER_MODE)
-	{
-		pthread_cancel(iface->sdwthread);      // cancel the shadow thread
-		unlink(iface->sock_name);
-	}
-
-	// remove interface from table...
-	deleteInterface(iface->interface_id);
-
-	return EXIT_SUCCESS;
-}
-
-
 
 /*
  * change the MTU value of the interface
@@ -556,79 +628,6 @@ int changeInterfaceMTU(int index, int new_mtu)
 	}
 	iface->device_mtu = new_mtu;
 	return EXIT_SUCCESS;
-}
-
-
-/*
- * change the interface state to up -- of this interface
- */
-int upThisInterface(interface_t *iface)
-{
-	int thread_stat;
-
-	iface->state = INTERFACE_UP;
-	thread_stat = pthread_create(&(iface->threadid), NULL,
-				     (void *)iface->devdriver->fromdev, (void *)iface);
-	if (thread_stat != 0)
-		return EXIT_FAILURE;
-
-	return EXIT_SUCCESS;
-}
-
-
-
-/*
- * change the interface state to down -- of this interface
- */
-int downThisInterface(interface_t *iface)
-{
-	int status;
-
-	status = pthread_cancel(iface->threadid);
-	iface->state = INTERFACE_DOWN;
-
-	if (status == 0)
-		return EXIT_SUCCESS;
-	else
-		return EXIT_FAILURE;
-}
-
-
-
-
-/*
- * change the interface state to up
- */
-int upInterface(int index)
-{
-	interface_t *iface;
-
-	iface = findInterface(index);
-	if (iface == NULL)
-	{
-		error("[upInterface]:: Interface %d not found.. unable to bring up ", index);
-		return EXIT_FAILURE;
-	}
-
-	return upThisInterface(iface);
-}
-
-
-/*
- * change the interface state to down
- */
-int downInterface(int index)
-{
-	interface_t *iface;
-
-	iface = findInterface(index);
-	if (iface == NULL)
-	{
-		error("[downInterface]:: Interface %d not found ..unable to take down ", index);
-		return EXIT_FAILURE;
-	}
-
-	return downThisInterface(iface);
 }
 
 
@@ -720,7 +719,7 @@ void printARPCache(void)
  *---------------------------------------------------------------------------------*/
 
 
-void GNETHalt(int gnethandler)
+void GNETHalt(pthread_t gnethandler)
 {
 	verbose(2, "[gnetHalt]:: Shutting down GNET handler.. \n");
 	haltInterfaces();
@@ -737,7 +736,7 @@ void GNETHalt(int gnethandler)
  * and injected back into the Output Queue once the ARP reply from a remote machine comes back.
  * This means a packet can go through the Output Queue two times.
  */
-int GNETInit(int *ghandler, char *config_dir, char *rname, simplequeue_t *sq)
+int GNETInit(pthread_t *ghandler, char *config_dir, char *rname, simplequeue_t *sq)
 {
 	int thread_stat;
 
@@ -756,7 +755,6 @@ int GNETInit(int *ghandler, char *config_dir, char *rname, simplequeue_t *sq)
 
 void *GNETHandler(void *outq)
 {
-	char tmpbuf[MAX_NAME_LEN];
 	interface_t *iface;
 	uchar mac_addr[6];
 	simplequeue_t *outputQ = (simplequeue_t *)outq;

@@ -66,9 +66,9 @@ gini_dvmrp_ping (int *count)
 			*(guint32 *) ip->ip_src = g_htonl (*(guint32 *) iface->ip_addr);
 
 			ip->ip_cksum = 0;
-			ip->ip_cksum = g_htons (gini_checksum ((char *) ip, ip->ip_hdr_len * 2));
+			ip->ip_cksum = g_htons (gini_checksum (ip, ip->ip_hdr_len * 2));
 
-			gini_mcast_ip_to_mac (packet->data.header.dst, GINI_MCAST_ALL_ROUTERS);
+			gini_mcast_ip_to_mac (packet->data.header.dst, (guchar *) GINI_MCAST_ALL_ROUTERS);
 
 			packet->frame.dst_interface = i;
 			packet->frame.arp_bcast = TRUE;
@@ -78,7 +78,7 @@ gini_dvmrp_ping (int *count)
 			igmp->subtype = GINI_DVMRP_MESSAGE_TYPE_REQUEST;
 			memset (&igmp->group_address, 0, sizeof (igmp->group_address));
 			igmp->checksum = 0;
-			igmp->checksum = g_htons (gini_checksum ((char *) igmp, sizeof (GiniIgmpHeader) / 2));
+			igmp->checksum = g_htons (gini_checksum (igmp, sizeof (GiniIgmpHeader) / 2));
 
 			gini_ip_send (packet);
 		}

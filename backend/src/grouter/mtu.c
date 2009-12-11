@@ -10,7 +10,7 @@
 #include <string.h>
 #include <slack/err.h>
 
-
+mtu_entry_t mtable[MAX_MTU];		        // MTU table
 /*-------------------------------------------------------------------------
  *                   M T U  T A B L E  F U N C T I O N S
  *-------------------------------------------------------------------------*/
@@ -24,7 +24,7 @@
 /*
  * initialize the MTU table to be empty
  */
-void MTUTableInit(mtu_entry_t mtable[])
+void MTUTableInit()
 {
 	int i;
 
@@ -39,7 +39,7 @@ void MTUTableInit(mtu_entry_t mtable[])
 /*
  * print mtu table
  */
-void printMTUTable(mtu_entry_t mtable[])
+void printMTUTable()
 {
 	int i;
 
@@ -60,7 +60,7 @@ void printMTUTable(mtu_entry_t mtable[])
  * Find the MTU of the given interface. Return -1 if the interface
  * was not found in the table
  */
-int findMTU(mtu_entry_t mtable[], int index)
+int findMTU(int index)
 {
 	if (mtable[index].is_empty != TRUE) 
 		return mtable[index].mtu;
@@ -73,7 +73,7 @@ int findMTU(mtu_entry_t mtable[], int index)
  * returns EXIT_FAILURE if the entry is not found in the MTU table.
  * Otherwise, EXIT_SUCCESS is returned and the ip_addr is copied
  */
-int findInterfaceIP(mtu_entry_t mtable[], int index, 
+int findInterfaceIP(int index, 
 		    uchar *ip_addr)
 {
 	if (mtable[index].is_empty != TRUE)
@@ -93,7 +93,7 @@ int findInterfaceIP(mtu_entry_t mtable[], int index,
  * when the router's another interface is probed, we want to detect that
  * and reply accordingly.
  */
-int findAllInterfaceIPs(mtu_entry_t mtable[], uchar buf[][4])
+int findAllInterfaceIPs(uchar buf[][4])
 {
 	int i, count = 0;
 	
@@ -115,7 +115,7 @@ int findAllInterfaceIPs(mtu_entry_t mtable[], uchar buf[][4])
  * the MTU table.
  */
 
-void deleteMTUEntry(mtu_entry_t mtable[], int index)
+void deleteMTUEntry(int index)
 {
 	if (mtable[index].is_empty != TRUE)
 	{
@@ -132,7 +132,7 @@ void deleteMTUEntry(mtu_entry_t mtable[], int index)
 /*
  * add MTU entry by argument index,mtu is the new value
  */
-void addMTUEntry(mtu_entry_t mtable[], int index, 
+void addMTUEntry(int index, 
 		 int mtu, uchar *ip_addr)
 {
 	// check validity of the specified value, set to DEFAULT_MTU if invalid

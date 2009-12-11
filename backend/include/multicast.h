@@ -18,8 +18,10 @@
 #define GINI_MCAST_ALL_DVMRP   "\xE0\x00\x00\x04"
 #define GINI_MCAST_ALL_PIM     "\xE0\x00\x00\x0D"
 
-void     gini_mcast_ip_to_mac (char mac[6],
-                               char ip[4]);
+void     gini_mcast_ip_to_mac (guchar       mac[6],
+                               const guchar ip[4]);
+
+void     gini_mcast_init (void);
 
 gboolean gini_mcast_process (GiniPacket *packet);
 

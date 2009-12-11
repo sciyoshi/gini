@@ -31,6 +31,12 @@ typedef struct _mtu_entry_t
 	uchar ip_addr[4];
 } mtu_entry_t;
 
-void MTUTableInit(mtu_entry_t mtable[]);
-
+void MTUTableInit();
+int findInterfaceIP(int index, 
+		    uchar *ip_addr);
+void deleteMTUEntry(int index);
+void addMTUEntry(int index, 
+		 int mtu, uchar *ip_addr);
+int findMTU(int index);
+int findAllInterfaceIPs(uchar buf[][4]);
 #endif //_MTU_H_

@@ -48,7 +48,7 @@ void *toEthernetDev(void *arg)
 	gpacket_t *inpkt = (gpacket_t *)arg;
 	interface_t *iface;
 	arp_packet_t *apkt;
-	char tmpbuf[MAX_TMPBUF_LEN];
+	uchar tmpbuf[MAX_TMPBUF_LEN];
 	int pkt_size;
 
 	verbose(2, "[toEthernetDev]:: entering the function.. ");
@@ -82,7 +82,6 @@ void *toEthernetDev(void *arg)
 void* fromEthernetDev(void *arg)
 {
 	interface_t *iface = (interface_t *) arg;
-	interface_array_t *iarr = (interface_array_t *)iface->iarray;
 	char *pkttag;
 	gpacket_t *in_pkt;
 
