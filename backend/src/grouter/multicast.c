@@ -28,6 +28,8 @@ gini_mcast_membership_add (GiniInterface   *interface,
 		gini_ntoa (tmp1, interface->ip_addr),
 		gini_ntoa (tmp2, (uchar *) &group_address));
 
+	gini_dvmrp_graft (group_address, interface);
+
 	g_tree_replace (*memberships, GINT_TO_POINTER (group_address), GINT_TO_POINTER (time.tv_sec));
 }
 

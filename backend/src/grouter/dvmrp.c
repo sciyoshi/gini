@@ -134,46 +134,6 @@ gini_dvmrp_send (GiniDvmrpMessageType  type,
 	gini_ip_send (packet);
 }
 
-static void
-gini_dvmrp_prune (GiniPacket *pruned)
-{
-	gini_dvmrp_send (
-		GINI_DVMRP_MESSAGE_TYPE_PRUNE,
-		*(guint32 *) pruned->ip->ip_dst,
-		*(guint32 *) pruned->ip->ip_src,
-		gini_iface_get (pruned->frame.src_interface));
-
-/*
-	GiniPacket *packet = gini_packet_new ();
-	GiniIpHeader *ip = packet->ip;
-	GiniIgmpHeader *igmp = packet->igmp;
-
-	igmp->version = GINI_IGMP_VERSION;
-	igmp->type = GINI_IGMP_MESSAGE_TYPE_DVMRP;
-	igmp->subtype = GINI_DVMRP_MESSAGE_TYPE_PRUNE;
-	igmp->group_address = *(guint32 *) pruned->ip->ip_src;
-	igmp->checksum = g_htons (gini_checksum ((char *) igmp, sizeof (GiniIgmpHeader) / 2));
-
-	ip->ip_ttl = 1;
-	ip->ip_prot = GINI_IGMP_PROTOCOL;
-
-	/* should be handled by IP layer */
-	/*
-	ip->ip_pkt_len = g_htons (sizeof (GiniIgmpHeader) + ip->ip_hdr_len * 4);
-
-	*(guint32 *) ip->ip_dst = *(guint32 *) pruned->ip->ip_dst;
-	*(guint32 *) ip->ip_src = g_htonl (*(guint32 *) pruned->frame.src_ip_addr);
-
-	ip->ip_cksum = g_htons (gini_checksum ((char *) ip, ip->ip_hdr_len * 2));
-
-	gini_mcast_ip_to_mac (packet->data.header.dst, (guchar *) pruned->ip->ip_dst);
-
-	packet->frame.dst_interface = pruned->frame.src_interface;
-	packet->frame.arp_bcast = TRUE;
-
-	gini_ip_send (packet);*/
-}
-
 gboolean
 gini_dvmrp_forward (GiniPacket *packet)
 {
@@ -255,7 +215,12 @@ gini_dvmrp_forward (GiniPacket *packet)
 	if (should_prune && !gini_dvmrp_edges[packet->frame.src_interface]) {
 		g_string_append (message, " sending PRUNE message");
 		group->prune_sent = TRUE;
-		gini_dvmrp_prune (packet);
+
+		gini_dvmrp_send (
+			GINI_DVMRP_MESSAGE_TYPE_PRUNE,
+			*(guint32 *) packet->ip->ip_dst,
+			*(guint32 *) packet->ip->ip_src,
+			gini_iface_get (packet->frame.src_interface));
 	}
 
 end:
@@ -266,10 +231,41 @@ end:
 	return FALSE;
 }
 
-gboolean
-gini_dvmrp_graft (int *count)
+void
+gini_dvmrp_graft (GiniInetAddress  group_address,
+                  GiniInterface   *src_iface)
 {
-	
+	gboolean forward_graft[GINI_IFACE_MAX] = { FALSE };
+	GiniInterface *iface = NULL;
+	GiniDvmrpRouteGroup *group;
+	int i;
+
+	for (i = 0; i < gini_dvmrp_routes->len; i++) {
+		GiniDvmrpRoute *route = gini_dvmrp_route_get (i);
+
+		if (route->iface == src_iface)
+			continue;
+
+		if (!(group = g_tree_lookup (route->groups, GINT_TO_POINTER (group_address))))
+			continue;
+
+		group->pruned[src_iface->id] = FALSE;
+
+		if (group->prune_sent) {
+			group->prune_sent = FALSE;
+			forward_graft[route->iface->id] = TRUE;
+		}
+	}
+
+	while ((iface = gini_iface_next (iface))) {
+		if (forward_graft[iface->id]) {
+			gini_dvmrp_send (
+				GINI_DVMRP_MESSAGE_TYPE_GRAFT,
+				*(guint32 *) GINI_MCAST_ALL_ROUTERS,
+				g_ntohl (group_address),
+				iface);
+		}
+	}
 }
 
 gboolean
@@ -278,33 +274,11 @@ gini_dvmrp_probe (int *count)
 	GiniInterface *iface = NULL;
 
 	while ((iface = gini_iface_next (iface))) {
-		GiniPacket *packet = gini_packet_new ();
-		GiniIpHeader *ip = packet->ip;
-		GiniIgmpHeader *igmp = packet->igmp;
-
-		igmp->version = GINI_IGMP_VERSION;
-		igmp->type = GINI_IGMP_MESSAGE_TYPE_DVMRP;
-		igmp->subtype = GINI_DVMRP_MESSAGE_TYPE_PROBE;
-		memset (&igmp->group_address, 0, sizeof (igmp->group_address));
-		igmp->checksum = g_htons (gini_checksum (igmp, sizeof (GiniIgmpHeader) / 2));
-
-		ip->ip_ttl = 1;
-		ip->ip_prot = GINI_IGMP_PROTOCOL;
-
-		/* should be handled by IP layer */
-		ip->ip_pkt_len = g_htons (sizeof (GiniIgmpHeader) + ip->ip_hdr_len * 4);
-
-		*(guint32 *) ip->ip_dst = *(guint32 *) GINI_MCAST_ALL_ROUTERS;
-		*(guint32 *) ip->ip_src = g_htonl (*(guint32 *) iface->ip_addr);
-
-		ip->ip_cksum = g_htons (gini_checksum (ip, ip->ip_hdr_len * 2));
-
-		gini_mcast_ip_to_mac (packet->data.header.dst, (guchar *) GINI_MCAST_ALL_ROUTERS);
-
-		packet->frame.dst_interface = iface->id;
-		packet->frame.arp_bcast = TRUE;
-
-		gini_ip_send (packet);
+		gini_dvmrp_send (
+			GINI_DVMRP_MESSAGE_TYPE_PROBE,
+			*(guint32 *) GINI_MCAST_ALL_ROUTERS,
+			0,
+			iface);
 	}
 
 	if (count && --(*count) <= 0) {
@@ -313,6 +287,94 @@ gini_dvmrp_probe (int *count)
 	}
 
 	return TRUE;
+}
+
+static gboolean
+gini_dvmrp_process_probe (GiniPacket *packet)
+{
+	packet->igmp->subtype = GINI_DVMRP_MESSAGE_TYPE_REPORT;
+
+	packet->igmp->checksum = 0;
+	packet->igmp->checksum = g_htons (gini_checksum ((char *) packet->igmp, sizeof (GiniIgmpHeader) / 2));
+
+	*(guint32 *) packet->ip->ip_src = g_htonl (*(guint32 *) packet->frame.src_ip_addr);
+	packet->ip->ip_ttl = 1;
+	packet->ip->ip_cksum = 0;
+	packet->ip->ip_cksum = g_htons (gini_checksum ((char *) packet->ip, packet->ip->ip_hdr_len * 2));
+
+	packet->frame.dst_interface = packet->frame.src_interface;
+	packet->frame.arp_bcast = TRUE;
+
+	gini_ip_send (packet);
+
+	return TRUE;
+}
+
+static gboolean
+gini_dvmrp_process_prune (GiniPacket *packet)
+{
+	GiniDvmrpRoute *route;
+	GiniInetAddress src_ip, dst_ip;
+	GTimeVal now;
+	GiniDvmrpRouteGroup *group;
+
+	src_ip = g_ntohl (packet->igmp->group_address);
+	dst_ip = g_ntohl (*(guint32 *) packet->ip->ip_dst);
+
+	// find the route to the sender in the table
+	if (!(route = gini_dvmrp_route_find (src_ip))) {
+		return FALSE;
+	}
+
+	// find the pruned list for this group
+	if (!(group = g_tree_lookup (route->groups, GINT_TO_POINTER (dst_ip)))) {
+		return FALSE;
+	}
+
+	g_get_current_time (&now);
+
+	group->pruned[packet->frame.src_interface] = now.tv_sec;
+
+	// we don't check here if the whole route is pruned; that's done if another
+	// packet is received for the same route
+
+	return FALSE;
+}
+
+static gboolean
+gini_dvmrp_process_graft (GiniPacket *packet)
+{
+	gini_dvmrp_graft (g_ntohl (packet->igmp->group_address),
+		              gini_iface_get (packet->frame.src_interface));
+
+	return TRUE;
+}
+
+gboolean
+gini_dvmrp_process (GiniPacket *packet)
+{
+	switch (packet->igmp->subtype) {
+	case GINI_DVMRP_MESSAGE_TYPE_PROBE:
+		return gini_dvmrp_process_probe (packet);
+
+	case GINI_DVMRP_MESSAGE_TYPE_REPORT:
+		gini_dvmrp_edges[packet->frame.src_interface] = FALSE;
+		return FALSE;
+
+	case GINI_DVMRP_MESSAGE_TYPE_PRUNE:
+		return gini_dvmrp_process_prune (packet);
+
+	case GINI_DVMRP_MESSAGE_TYPE_GRAFT:
+		return gini_dvmrp_process_graft (packet);
+
+	case GINI_DVMRP_MESSAGE_TYPE_LEAF:
+		break;
+
+	default:
+		g_debug ("silently dropping unknown DVMRP message type %d", packet->igmp->subtype);
+	}
+
+	return FALSE;
 }
 
 static void
@@ -432,81 +494,5 @@ gini_dvmrp_init (void)
 	grtr_cli_register ("dvmrp", gini_dvmrp_cli, NULL);
 
 	//gini_dvmrp_route_init ();
-}
-
-static gboolean
-gini_dvmrp_process_probe (GiniPacket *packet)
-{
-	packet->igmp->subtype = GINI_DVMRP_MESSAGE_TYPE_REPORT;
-
-	packet->igmp->checksum = 0;
-	packet->igmp->checksum = g_htons (gini_checksum ((char *) packet->igmp, sizeof (GiniIgmpHeader) / 2));
-
-	*(guint32 *) packet->ip->ip_src = g_htonl (*(guint32 *) packet->frame.src_ip_addr);
-	packet->ip->ip_ttl = 1;
-	packet->ip->ip_cksum = 0;
-	packet->ip->ip_cksum = g_htons (gini_checksum ((char *) packet->ip, packet->ip->ip_hdr_len * 2));
-
-	packet->frame.dst_interface = packet->frame.src_interface;
-	packet->frame.arp_bcast = TRUE;
-
-	gini_ip_send (packet);
-
-	return TRUE;
-}
-
-static gboolean
-gini_dvmrp_process_prune (GiniPacket *packet)
-{
-	GiniDvmrpRoute *route;
-	GiniInetAddress src_ip, dst_ip;
-	GTimeVal now;
-	GiniDvmrpRouteGroup *group;
-
-	src_ip = g_ntohl (packet->igmp->group_address);
-	dst_ip = g_ntohl (*(guint32 *) packet->ip->ip_dst);
-
-	// find the route to the sender in the table
-	if (!(route = gini_dvmrp_route_find (src_ip))) {
-		return FALSE;
-	}
-
-	// find the pruned list for this group
-	if (!(group = g_tree_lookup (route->groups, GINT_TO_POINTER (dst_ip)))) {
-		return FALSE;
-	}
-
-	g_get_current_time (&now);
-
-	group->pruned[packet->frame.src_interface] = now.tv_sec;
-
-	// we don't check here if the whole route is pruned; that's done if another
-	// packet is received for the same route
-
-	return FALSE;
-}
-
-gboolean
-gini_dvmrp_process (GiniPacket *packet)
-{
-	switch (packet->igmp->subtype) {
-	case GINI_DVMRP_MESSAGE_TYPE_PROBE:
-		return gini_dvmrp_process_probe (packet);
-
-	case GINI_DVMRP_MESSAGE_TYPE_REPORT:
-		gini_dvmrp_edges[packet->frame.src_interface] = FALSE;
-		return FALSE;
-
-	case GINI_DVMRP_MESSAGE_TYPE_PRUNE:
-		return gini_dvmrp_process_prune (packet);
-
-	case GINI_DVMRP_MESSAGE_TYPE_LEAF:
-		break;
-
-	default:
-		g_debug ("silently dropping unknown DVMRP message type %d", packet->igmp->subtype);
-	}
-
-	return FALSE;
 }
 

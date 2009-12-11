@@ -472,6 +472,7 @@ def getVRIFOutLine(nwIf, socketName):
             outLine += "-gw %s" % route.nexthop
         outLine += "\n"
     outLine += "display update-delay 2\n"
+    outLine += "dvmrp init\n"
     return outLine
 
 def getVMIFOutLine(nwIf, socketName, name):
@@ -489,6 +490,7 @@ def getVMIFOutLine(nwIf, socketName, name):
             return None
     # create the config file
     configOut = open(configFile, "w")
+    configOut.write("sysctl -w net.ipv4.conf.all.force_igmp_version=1\n")
     if nwIf.ip:
         configOut.write("ifconfig %s " % nwIf.name)
         configOut.write("%s " % nwIf.ip)
@@ -498,7 +500,7 @@ def getVMIFOutLine(nwIf, socketName, name):
             configOut.write("netmask %s " % route.netmask)
             if route.gw:
                 configOut.write("gw %s" % route.gw)
-        configOut.write("\n")
+        configOut.write("\nroute add default gw %s\n" % [r.gw for r in nwIf.routes if r.gw and r.gw != '0.0.0.0'][0])
     configOut.write("echo -ne \"\\033]0;" + name + "\\007\"")
     configOut.close()
     os.chmod(configFile, 0777)
