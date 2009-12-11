@@ -73,6 +73,7 @@ typedef struct {
 #define gini_ip_outgoing IPOutgoingPacket
 #define gini_ip_send IPSend2Output
 
+#define GINI_IP_CMP(a, b) (memcmp ((a), (b), sizeof (GiniInetAddress)))
 
 int gini_ip_send_fragmented (GiniPacket *packet);
 

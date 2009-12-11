@@ -57,18 +57,11 @@ int isPIDAlive(int pid);
 
 static GThread *main_loop_thread;
 
-static gpointer
-grtr_main (gpointer data)
-{
-	GMainLoop *loop = g_main_loop_new (NULL, FALSE);
-
-	g_main_loop_run (loop);
-}
-
 static void
 grtr_init (void)
 {
 	GError *error = NULL;
+	GMainLoop *loop = g_main_loop_new (NULL, FALSE);
 
 	g_thread_init (NULL);
 
@@ -76,7 +69,7 @@ grtr_init (void)
 	gini_udp_init ();
 	gini_mcast_init ();
 
-	main_loop_thread = g_thread_create (grtr_main, NULL, TRUE, &error);
+	main_loop_thread = g_thread_create ((GThreadFunc) g_main_loop_run, loop, TRUE, &error);
 
 	if (error) {
 		g_error ("could not start main loop: %s", error->message);
@@ -105,9 +98,6 @@ int main(int ac, char *av[])
 	ARPInit();
 	IPInit();
 
-	grtr_init ();
-
-
 	classifier = createClassifier();
 	filter = createFilter(classifier, 0);
 
@@ -126,6 +116,8 @@ int main(int ac, char *av[])
 		addTarget("Default Queue", qtoa);
 	else
 		printf("Error .. found null queue for default\n");
+
+	grtr_init ();
 
 	// start the CLI..
 	CLIInit(&(rconfig));

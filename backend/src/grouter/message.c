@@ -12,7 +12,9 @@
 GiniPacket *
 gini_packet_new (void)
 {
-	GiniPacket *packet = g_malloc0 (sizeof (GiniPacket));
+	GiniPacket *packet = malloc (sizeof (GiniPacket));
+
+	memset (packet, 0, sizeof (packet));
 
 	packet->data.header.prot = g_htons (GINI_IP_PROTOCOL);
 
@@ -35,7 +37,7 @@ gini_packet_new (void)
 GiniPacket *
 gini_packet_copy (GiniPacket *packet)
 {
-	GiniPacket *copy = g_malloc (sizeof (GiniPacket));
+	GiniPacket *copy = malloc (sizeof (GiniPacket));
 
 	memcpy (copy, packet, sizeof (GiniPacket));
 

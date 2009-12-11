@@ -34,6 +34,7 @@ grouter_src = Split ("""grouter.c
                         udp.c
 						igmp.c
 						multicast.c
+						dvmrp.c
                         filter.c""")
 
 # some of the following library dependencies can be removed?

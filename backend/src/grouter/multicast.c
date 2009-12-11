@@ -57,7 +57,7 @@ add_expired (GiniInetAddress  group_address,
              gulong           last_time,
              ExpireInfo      *info)
 {
-	if (info->current.tv_sec - last_time > GRTR_MCAST_MEMBERSHIP_EXPIRATION_TIME) {
+	if (info->current.tv_sec - last_time > GINI_MCAST_MEMBERSHIP_EXPIRATION_TIME) {
 		info->expired = g_slist_prepend (info->expired, GINT_TO_POINTER (group_address));
 	}
 }
@@ -101,26 +101,54 @@ gini_mcast_clean_expired (gpointer data)
  * Multicast packet handling
  */
 
+
+
 void
-gini_mcast_incoming (GiniPacket *packet)
+gini_mcast_ip_to_mac (char mac[6],
+                      char ip[4])
 {
+	memcpy (mac, ip, sizeof (GiniInetAddress));
+
+	mac[0] = 0x01;
+	mac[1] = 0x00;
+	mac[2] = 0x5E;
+	mac[3] &= 0x7F;
+}
+
+gboolean
+gini_mcast_process (GiniPacket *packet)
+{
+	char tmp[64];
+
 	if (packet->ip->ip_prot == GINI_IGMP_PROTOCOL) {
-		gini_igmp_process (packet);
+		return gini_dvmrp_process (packet);
 	} else {
 		int i;
 
 		for (i = 0; i < MAX_INTERFACES; i++) {
 			GiniInterface *iface = gini_iface_get (i);
 			GTree *memberships = gini_mcast_memberships[i];
+			GiniInetAddress addr;
 
 			if (!iface || !memberships || i == packet->frame.src_interface) {
 				continue;
 			}
 
-			if (g_tree_lookup_extended (memberships, packet->ip->ip_dst, NULL, NULL)) {
-				g_debug ("forwarding to interface %s", iface->device_name);
+			addr = g_ntohl (*(GiniInetAddress *) packet->ip->ip_dst);
+
+			if (g_tree_lookup_extended (memberships, GINT_TO_POINTER (addr), NULL, NULL)) {
+				// copy the packet and forward on this interface
+				GiniPacket *forward = gini_packet_copy (packet);
+
+				forward->frame.dst_interface = i;
+				forward->frame.arp_bcast = TRUE;
+
+				gini_ip_send_fragmented (forward);
 			}
 		}
+
+		// packet needs to be freed
+		return FALSE;
 	}
 }
 
@@ -183,6 +211,7 @@ void
 gini_mcast_init (void)
 {
 	gini_igmp_init ();
+	gini_dvmrp_init ();
 
 	grtr_cli_register ("mcast", gini_mcast_cli, NULL);
 

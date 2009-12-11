@@ -55,11 +55,12 @@ void IPIncomingPacket(gpacket_t *in_pkt)
 		verbose(2, "[IPIncomingPacket]:: got IP packet destined to this router");
 		IPProcessMyPacket(in_pkt);
 	} else if (GINI_IP_IS_MULTICAST (ip_pkt->ip_dst)) {
-		g_debug ("incoming multicast packet");
 		if (IPVerifyPacket (ip_pkt) != EXIT_SUCCESS) {
 			return;
 		}
-		gini_mcast_incoming (in_pkt);
+		if (!gini_mcast_process (in_pkt)) {
+			free (in_pkt);
+		}
 	} else if (COMPARE_IP(gNtohl(tmpbuf, ip_pkt->ip_dst), bcast_ip) == 0)
 	{           
 		// TODO: rudimentary 'broadcast IP address' check
