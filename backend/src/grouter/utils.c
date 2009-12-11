@@ -137,7 +137,7 @@ ushort checksum(void *buf, int iwords)
 	{
 		cksum += buffer[0] << 8;
 		cksum += buffer[1];
-		buf += 2;
+		buffer += 2;
 	}
 
 	// add in all carries
