@@ -1,3 +1,9 @@
+/**
+ * COMP535 - Programming Assignment 2, IP Multicasting
+ * Samuel Cormier-Iijima (260174995), Michael Spivack (260224370)
+ * multicast.h: multicast group membership and expiration
+ */
+
 #ifndef __MULTICAST_H__
 #define __MULTICAST_H__
 

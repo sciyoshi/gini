@@ -1,3 +1,9 @@
+/**
+ * COMP535 - Programming Assignment 2, IP Multicasting
+ * Samuel Cormier-Iijima (260174995), Michael Spivack (260224370)
+ * igmp.c: IGMPv1 protocol for hosts to join multicast groups
+ */
+
 #include "igmp.h"
 #include "dvmrp.h"
 #include "multicast.h"

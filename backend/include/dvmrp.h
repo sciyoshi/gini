@@ -1,3 +1,9 @@
+/**
+ * COMP535 - Programming Assignment 2, IP Multicasting
+ * Samuel Cormier-Iijima (260174995), Michael Spivack (260224370)
+ * dvmrp.h: DVMRP-like distribution tree maintenance protocol
+ */
+
 #ifndef __DVMRP_H__
 #define __DVMRP_H__
 

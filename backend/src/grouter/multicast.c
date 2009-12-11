@@ -1,3 +1,9 @@
+/**
+ * COMP535 - Programming Assignment 2, IP Multicasting
+ * Samuel Cormier-Iijima (260174995), Michael Spivack (260224370)
+ * multicast.c: multicast group membership and expiration
+ */
+
 #include <glib/gstdio.h>
 
 #include "multicast.h"

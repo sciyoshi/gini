@@ -1,41 +1,7 @@
 /**
- * COMP535 - Programming Assignment 2
- * IP Multicasting
+ * COMP535 - Programming Assignment 2, IP Multicasting
  * Samuel Cormier-Iijima (260174995), Michael Spivack (260224370)
- *
- * This file implements a simple DVMRP-like protocol to build and maintain
- * a source-based distribution tree. Since GINI does not support dynamic
- * topology changes, we decided not to implement the dynamic routing algorithm
- * that DVMRP and RIP provide. Thus, instead of maintaining its own routing
- * table that includes a metric, this protocol simply uses the static routing
- * information provided by the GINI route table.
- *
- * Because of this limitation, some of the information needed by Reverse Path
- * Multicasting (RPM) is not available. Specifically, the router cannot
- * determine which of the virtual networks it is connected to are children
- * (usually found by Reverse Path Broadcasting, or RPB) and which are leaves
- * (found using Truncated Reverse Path Broadcasting, or TRPB). Instead, we
- * extend the pruning protocol to include a message saying that the neighbor
- * router does not want to receive ANY messages from the given source,
- * regardless of the multicast group. This takes the place of determining leaves
- * in DVMRP, since implementing the full dynamic routing algorithm would be
- * too complicated for the assignment, and since GINI routers can only be
- * connected either to a single other router or a LAN of hosts (GINI doesn't
- * support multiple routers connected to a switch). This works under the
- * assumption that the network topology doesn't change on-the-fly.
- *
- * Also, since GINI does not provide a way to know whether an interface is
- * connected to another router or to a LAN of hosts, we decided to send packets
- * to the multicast all router address to ping for other routers. If no reply
- * is received, we assume that the memberships for that link can be managed
- * by IGMP.
- *
- * See [1], [2], and [3] a more in-depth discussion of this subject.
- *
- * [1] RFC 1075, "Distance Vector Multicast Routing Protocol".
- * [1] Internet Draft, "DVMRP Version 3".
- * [3] Deering, S., "Multicast Routing in Internetworks and Extended LANs",
- *     SIGCOMM Summer 1988 Proceedings, August 1988.
+ * dvmrp.c: DVMRP-like distribution tree maintenance protocol
  */
 
 #include <glib/gstdio.h>
