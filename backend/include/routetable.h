@@ -18,6 +18,9 @@
 
 #define MAX_ROUTES                      20	// maximum route table size
 
+#define GINI_ROUTE_MAX MAX_ROUTES
+
+#define gini_route_table route_tbl
 
 /*
  * route table entry
@@ -29,7 +32,11 @@ typedef struct _route_entry_t
 	uchar netmask[4];			// Netmask
 	uchar nexthop[4];			// Nexthop IP address
 	int  interface;			        // output interface
-} route_entry_t;
+} route_entry_t, GiniRoute;
+
+extern route_entry_t route_tbl[MAX_ROUTES];
+
+#define gini_route_table_find(ip, nexthop, iface) (findRouteEntry (route_tbl, ip, nexthop, iface) == EXIT_SUCCESS)
 
 // prototypes of the functions provided for the route table handling..
 

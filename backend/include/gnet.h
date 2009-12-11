@@ -18,7 +18,7 @@
 
 
 #define	MAX_INTERFACES					20      // max number of interfaces supported
-
+#define GINI_IFACE_MAX MAX_INTERFACES
 
 #define INTERFACE_DOWN                  'D'     // the down state of the interface
 #define INTERFACE_UP                    'U'     // the up state of the interface
@@ -36,7 +36,10 @@
  */
 typedef struct _interface_t
 {
-	int interface_id;					// interface identifier
+	union {
+		int interface_id;					// interface identifier
+		int id;
+	};
 	int state;                          // active OR inactive
 	int mode;                       	// client OR server mode
 	char device_type[MAX_DNAME_LEN];	// device type specification
@@ -51,9 +54,7 @@ typedef struct _interface_t
 	pthread_t sdwthread;
 	device_t *devdriver;				// the device driver that include toXDev and fromXDev functions
 	void *iarray;                       // pointer to interface array type
-} interface_t;
-
-typedef interface_t GiniInterface;
+} interface_t, GiniInterface;
 
 typedef struct _interface_array_t
 {
@@ -87,7 +88,8 @@ void *delayedServerCall(void *arg);
 void *GNETHandler(void *outq);
 int changeInterfaceMTU(int index, int new_mtu);
 
-int             gini_iface_count (void);
-GiniInterface * gini_iface_get   (int index);
+GiniInterface * gini_iface_get  (int index);
+
+GiniInterface * gini_iface_next (GiniInterface *iface);
 
 #endif //__GNET_H__

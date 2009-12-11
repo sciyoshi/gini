@@ -33,6 +33,13 @@ void IPInit()
 	MTUTableInit();
 }
 
+int
+gini_ip_cmp (GiniInetAddress a,
+             GiniInetAddress b)
+{
+	return a - b;
+}
+
 
 /*
  * IPIncomingPacket: Process incoming IP packet. 

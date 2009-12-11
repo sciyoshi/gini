@@ -14,7 +14,7 @@ typedef struct _GiniIgmpHeader GiniIgmpHeader;
 
 #define GINI_IGMP_QUERY_STARTUP_RATE 4
 #define GINI_IGMP_QUERY_STARTUP_COUNT 3
-#define GINI_IGMP_QUERY_RATE 20
+#define GINI_IGMP_QUERY_RATE 60
 
 typedef enum {
 	GINI_IGMP_MESSAGE_TYPE_QUERY = 1,

@@ -91,6 +91,7 @@
 #define gini_aton Dot2IP
 #define gini_ntoa IP2Dot
 #define gini_checksum checksum
+#define gini_ip_cmp_masked(ip, network, netmask) compareIPUsingMask((uchar *) (ip), (uchar *) (network), (uchar *) (netmask))
 
 
 // check IP RFC specifications

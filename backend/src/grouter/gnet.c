@@ -112,10 +112,36 @@ void GNETInitInterfaces()
 		netarray.elem[i] = NULL;
 }
 
-int
-gini_iface_count (void)
+GiniInterface *
+gini_iface_get (int index)
 {
-	return netarray.count;
+	return netarray.elem[index];
+}
+
+/**
+ * gini_iface_next:
+ * @iface: the previous interface, or %NULL to start from the beginning.
+ *
+ * Simplifies looping through every available interface.
+ *
+ * <informalexample><programlisting>
+ *   GiniInterface *iface = NULL;
+ *
+ *   while ((iface = gini_iface_next (iface))) {
+ *     ... do something with iface here ... 
+ *   }
+ * </programlisting></informalexample>
+ *
+ * Returns: the next valid interface, or %NULL if the end has been reached.
+ */
+GiniInterface *
+gini_iface_next (GiniInterface *iface)
+{
+	int i = iface ? iface->interface_id : 0;
+
+	while (i < GINI_IFACE_MAX && !netarray.elem[i]) i++;
+
+	return i < GINI_IFACE_MAX ? netarray.elem[i] : NULL;
 }
 
 
@@ -242,12 +268,6 @@ void haltInterfaces()
  * is direct mapped! We need to search the table if we want to find interfaces
  * by IP address or MAC address or any other parameter.
  */
-
-GiniInterface *
-gini_iface_get (int index)
-{
-	return netarray.elem[index];
-}
 
 
 interface_t *findInterface(int indx)

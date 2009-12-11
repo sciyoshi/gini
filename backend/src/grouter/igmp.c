@@ -6,49 +6,40 @@
 static gboolean
 gini_igmp_query (int *count)
 {
-	int i;
+	GiniInterface *iface = NULL;
 
 	g_debug ("sending IGMP query on all interfaces...");
 
-	for (i = 0; i < MAX_INTERFACES; i++) {
-		GiniInterface *iface = gini_iface_get (i);
+	while ((iface = gini_iface_next (iface))) {
+		GiniPacket *packet = gini_packet_new ();
+		GiniIpHeader *ip = packet->ip;
+		GiniIgmpHeader *igmp = packet->igmp;
 
-		if (!iface) {
-			continue;
-		} else {
-			GiniPacket *packet = gini_packet_new ();
-			GiniIpHeader *ip = packet->ip;
-			GiniIgmpHeader *igmp = packet->igmp;
+		igmp->version = GINI_IGMP_VERSION;
+		igmp->type = GINI_IGMP_MESSAGE_TYPE_QUERY;
+		memset (&igmp->group_address, 0, sizeof (igmp->group_address));
+		igmp->checksum = g_htons (gini_checksum ((char *) igmp, sizeof (GiniIgmpHeader) / 2));
 
-			ip->ip_ttl = 1;
-			ip->ip_prot = GINI_IGMP_PROTOCOL;
+		ip->ip_ttl = 1;
+		ip->ip_prot = GINI_IGMP_PROTOCOL;
 
-			/* should be handled by IP layer */
-			ip->ip_pkt_len = g_htons (sizeof (GiniIgmpHeader) + ip->ip_hdr_len * 4);
+		/* should be handled by IP layer */
+		ip->ip_pkt_len = g_htons (sizeof (GiniIgmpHeader) + ip->ip_hdr_len * 4);
 
-			*(guint32 *) ip->ip_dst = *(guint32 *) GINI_MCAST_ALL_HOSTS;
-			*(guint32 *) ip->ip_src = g_htonl (*(guint32 *) iface->ip_addr);
+		*(guint32 *) ip->ip_dst = *(guint32 *) GINI_MCAST_ALL_HOSTS;
+		*(guint32 *) ip->ip_src = g_htonl (*(guint32 *) iface->ip_addr);
 
-			ip->ip_cksum = 0;
-			ip->ip_cksum = g_htons (gini_checksum ((char *) ip, ip->ip_hdr_len * 2));
+		ip->ip_cksum = g_htons (gini_checksum ((char *) ip, ip->ip_hdr_len * 2));
 
-			gini_mcast_ip_to_mac (packet->data.header.dst, (guchar *) GINI_MCAST_ALL_HOSTS);
+		gini_mcast_ip_to_mac (packet->data.header.dst, (guchar *) GINI_MCAST_ALL_HOSTS);
 
-			packet->frame.dst_interface = i;
-			packet->frame.arp_bcast = TRUE;
+		packet->frame.dst_interface = iface->id;
+		packet->frame.arp_bcast = TRUE;
 
-			igmp->version = GINI_IGMP_VERSION;
-			igmp->type = GINI_IGMP_MESSAGE_TYPE_QUERY;
-			igmp->_unused = 0;
-			memset (&igmp->group_address, 0, sizeof (igmp->group_address));
-			igmp->checksum = 0;
-			igmp->checksum = g_htons (gini_checksum ((char *) igmp, sizeof (GiniIgmpHeader) / 2));
-
-			gini_ip_send (packet);
-		}
+		gini_ip_send (packet);
 	}
 
-	if (count && --*count <= 0) {
+	if (count && --(*count) <= 0) {
 		g_free (count);
 		return FALSE;
 	}

@@ -75,6 +75,10 @@ typedef struct {
 
 #define GINI_IP_CMP(a, b) (memcmp ((a), (b), sizeof (GiniInetAddress)))
 
+
+int gini_ip_cmp (GiniInetAddress a,
+                 GiniInetAddress b);
+
 int gini_ip_send_fragmented (GiniPacket *packet);
 
 // function prototypes...

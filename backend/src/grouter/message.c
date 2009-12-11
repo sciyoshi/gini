@@ -15,7 +15,7 @@ gini_packet_new (void)
 {
 	GiniPacket *packet = malloc (sizeof (GiniPacket));
 
-	memset (packet, 0, sizeof (packet));
+	memset (packet, 0, sizeof (GiniPacket));
 
 	packet->data.header.prot = g_htons (GINI_IP_PROTOCOL);
 

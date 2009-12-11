@@ -31,5 +31,8 @@ void     gini_mcast_membership_add (GiniInterface   *interface,
 void     gini_mcast_membership_remove (GiniInterface   *interface,
                                        GiniInetAddress  group_address);
 
+gboolean gini_mcast_membership_get (GiniInterface   *interface,
+                                    GiniInetAddress  group_address);
+
 #endif
 
